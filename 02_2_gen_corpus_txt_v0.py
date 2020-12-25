@@ -1,3 +1,7 @@
+# SERVER: Aux script for preprocessing in server
+# Input:  List with tokenized corpus including '<UNK>' tokens in pkl format
+# Output: String with corpus including '<UNK>' tokens in txt format
+
 import sys
 import codecs
 import pickle
