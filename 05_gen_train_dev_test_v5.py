@@ -1,7 +1,7 @@
 # v1 -> Generates tokenized text
 # v2 -> Saves dataframes in pkl format
 # v3 -> Bug fixed line 19: Pads top n articles to num_passages per case
-# v4 -> Adds oversampling to train dataset
+# v5 -> Adds oversampling to train dataset
 #       Uses pd.read_csv instead of pickle.load()
 #       Adds random seed
 
@@ -43,7 +43,7 @@ case_test_path = os.path.join(input_folder, 'case_EN_test_df.pkl')
 
 #%% Variable initialization
 
-arts_to_skip = ['P1']
+arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6']
 num_passages_per_case = 5
 seed = 1234
 
@@ -67,7 +67,7 @@ print('shape case test = ', case_test_df.shape)
 str_data_train = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
 
 # Build dataframe
-for case in tqdm.tqdm(case_test_df.iterrows()):
+for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
     art_text = [ECHR_dict[x] for x in range(1,67)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
     outcome = [0] * 66
@@ -106,7 +106,7 @@ str_data_train = pd.concat([x_train_res, y_train_res], axis = 1)
 str_data_dev = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
 
 # Build dataframe
-for case in tqdm.tqdm(case_test_df.iterrows()):
+for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
     art_text = [ECHR_dict[x] for x in range(1,67)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
     outcome = [0] * 66
@@ -134,7 +134,7 @@ for case in tqdm.tqdm(case_test_df.iterrows()):
 str_data_test = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
 
 # Build dataframe
-for case in tqdm.tqdm(case_test_df.iterrows()):
+for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
     art_text = [ECHR_dict[x] for x in range(1,67)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
     outcome = [0] * 66
