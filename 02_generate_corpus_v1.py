@@ -86,15 +86,20 @@ corpus_new = (' ').join(corpus_new)
 with codecs.open(output_path, 'w', 'utf-8') as fw:
     fw.write(corpus_new)
     
-"""    
-#%%----------------------------------------------------------------------------
+    
 
-#%%
-with open('C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/01_preprocessed/KUKU_vocab.pkl', 'wb') as fw:
+#%%--------------------------------------------------------------------------------
+
+with open('C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/01_preprocessed/vocab_list.pkl', 'wb') as fw:
     pickle.dump(vocab, fw)
 #%%
-with codecs.open(output_path, 'w', 'utf-8') as fw:
-    fw.write(corpus)
+
+with open('C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/01_preprocessed/corpus_tok_list.pkl', 'wb') as fw:
+    pickle.dump(corpus_tok, fw)
+
 #%%
-"""
+
+pickle.load('C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/01_preprocessed/corpus_tok_list.pkl')
+
+
 
