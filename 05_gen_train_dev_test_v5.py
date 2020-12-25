@@ -3,6 +3,7 @@
 # v3 -> Bug fixed line 19: Pads top n articles to num_passages per case
 # v4 -> Adds oversampling to train dataset
 #       Uses pd.read_csv instead of pickle.load()
+#       Adds random seed
 
 #%% Imports
 import os
@@ -35,12 +36,12 @@ output_path_dev = os.path.join(base_folder, '01_data', '01_preprocessed', 'model
 output_path_test = os.path.join(base_folder, '01_data', '01_preprocessed', 'model_test.pkl')
 
 train_dev_test_files = ['case_EN_train', 'case_EN_dev', 'case_EN_test']
-ECHR_dict_path = os.path.join(input_folder, 'ECHR.dict')
-case_train_path = os.path.join(input_folder, 'case_EN_train')
-case_dev_path = os.path.join(input_folder, 'case_EN_dev')
-case_test_path = os.path.join(input_folder, 'case_EN_test')
+ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
+case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
+case_dev_path = os.path.join(input_folder, 'case_EN_dev_df.pkl')
+case_test_path = os.path.join(input_folder, 'case_EN_test_df.pkl')
 
-#%% Variable initializatoin
+#%% Variable initialization
 
 arts_to_skip = ['P1']
 num_passages_per_case = 5
