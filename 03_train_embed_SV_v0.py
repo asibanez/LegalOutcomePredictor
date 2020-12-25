@@ -1,3 +1,8 @@
+# SERVER: Script required for running fastext on server
+# Input:  Corpus (including <UNK>') in txt format
+# Output: Dictionary tok_2_id in pkl format
+#         Dictionary id_2_embed in pkl format
+
 import os
 import sys
 import tqdm
