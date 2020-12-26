@@ -138,7 +138,7 @@ def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
         
         # Move to cuda
         if next(model.parameters()).is_cuda:
-            X, Y = X.cuda(), Y.cuda()
+            X, Y = X.to(device), Y.to(device)
         
         # Zero gradients
         optimizer.zero_grad()
@@ -220,6 +220,7 @@ momentum = 0.9
 wd = 0.00001
 use_cuda = True
 pad_idx = 0
+device = torch.device('cuda:3')
 
 #%% Load data
 
@@ -256,7 +257,8 @@ model = ECHR_model(vocab_size, embed_dim, pad_idx, input_size,
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
     print('moving model to cuda')
-    model = model.cuda()
+    #model = model.cuda()
+    model = model.to(device)
 
 print(model)
 
