@@ -45,6 +45,7 @@ case_test_path = os.path.join(input_folder, 'case_EN_test_df.pkl')
 
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6']
 num_passages_per_case = 5
+num_articles = 67
 seed = 1234
 
 #%% Load data
@@ -68,9 +69,9 @@ str_data_train = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'
 
 # Build dataframe
 for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
-    art_text = [ECHR_dict[x] for x in range(1,67)]
+    art_text = [ECHR_dict[x] for x in range(1, num_articles)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
-    outcome = [0] * 66
+    outcome = [0] * (num_articles - 1)
     
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
@@ -107,9 +108,9 @@ str_data_dev = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
 
 # Build dataframe
 for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
-    art_text = [ECHR_dict[x] for x in range(1,67)]
+    art_text = [ECHR_dict[x] for x in range(1, num_articles)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
-    outcome = [0] * 66
+    outcome = [0] * (num_articles - 1)
     
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
@@ -135,9 +136,9 @@ str_data_test = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome']
 
 # Build dataframe
 for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
-    art_text = [ECHR_dict[x] for x in range(1,67)]
+    art_text = [ECHR_dict[x] for x in range(1, num_articles)]
     art_text_tokens = [nltk.word_tokenize(x.lower()) for x in art_text]
-    outcome = [0] * 66
+    outcome = [0] * (num_articles - 1)
     
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
@@ -149,6 +150,7 @@ for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
             continue
         violated_art_id = int(violated_art_id)
         outcome[violated_art_id] = 1
+        
         
     aux_df = pd.DataFrame({'article_text':art_text_tokens,
                            'case_texts': selected_case_texts_tokens,

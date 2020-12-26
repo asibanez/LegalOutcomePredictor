@@ -1,9 +1,14 @@
+# v1 -> Pickle dataframes read with pandas - "Load data" section
+# v2 -> Splits LSTM into 2 (LSTM and case)
+# v3 -> Uses FastText embeddings
+
 #%% Imports
+
 import os
 import pickle
 import torch
-import pandas as pd
 import numpy as np
+import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -11,6 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 
 # Function definition
 #%% DataClass
+
 class ECHR_dataset(Dataset):
     def __init__(self, data_df, tok_to_id, id_2_embed):
         self.data_df = data_df
@@ -74,26 +80,50 @@ class ECHR_dataset(Dataset):
 
 class ECHR_model(nn.Module):
     
-    def __init__(self, vocab_size, embed_dim, pad_idx, input_size, hidden_size, ouput_size):
+    def __init__(self, vocab_size, embed_dim, pad_idx, input_size,
+                 hidden_size, ouput_size, pretrained_embeddings):
         super(ECHR_model, self).__init__()
-        self.embed = nn.Embedding(num_embeddings = vocab_size,
-                                  embedding_dim = embed_dim)
-        #self.embed.from_pretrained(ARRAY CON IDS)
-        self.lstm = nn.LSTM(input_size = input_size,
+
+        # Embedding
+        self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
+        
+        # Encode article
+        self.lstm_art = nn.LSTM(input_size = input_size,
                                 hidden_size = hidden_size,
                                 bidirectional = True,
                                 batch_first = True)      
-        self.fc_1 = nn.Linear(in_features = 2 * hidden_size,
+        
+        # Encode cases
+        self.lstm_case = nn.LSTM(input_size = input_size,
+                                 hidden_size = hidden_size,
+                                 bidirectional = True,
+                                 batch_first = True)      
+        
+        # Concatenate
+        self.fc_1 = nn.Linear(in_features = 4 * hidden_size,
                               out_features = 1)
-        self.sigmoid = nn.Sigmoid()
+        
     
     def forward(self, input):
+        # Embedding
         x = self.embed(input.long())
-        x = self.lstm(x)
-        x_fwd = x[0][:, -1, 0:64]
-        x_bcwd = x[0][:, 0, 64:128]
-        x = torch.cat((x_fwd, x_bcwd), dim = 1)
+        
+        # LSTM article
+        x_art = self.lstm_art(x[:, 0:512, :])
+        x_art_fwd = x_art[0][:, -1, 0:64]
+        x_art_bkwd = x_art[0][:, 0, 64:128]
+        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)
+        
+        # LSTM cases
+        x_case = self.lstm_case(x[:, 512:, :])
+        x_case_fwd = x_case[0][:, -1, 0:64]
+        x_case_bkwd = x_case[0][:, 0, 64:128]
+        x_case = torch.cat((x_case_fwd, x_case_bkwd), dim = 1)
+        
+        # Concatenate article & passages
+        x = torch.cat((x_art, x_case), dim = 1)
         x = self.fc_1(x)
+        
         return x
 
 #%% Train function
@@ -128,8 +158,6 @@ def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
         total_entries += current_batch_size
         sum_train_loss += (loss.item() * current_batch_size)
         
-        #print("loss = ", loss.item())
-
     avg_train_loss = sum_train_loss / total_entries
     train_loss_history.append(avg_train_loss)
     
@@ -174,16 +202,16 @@ base_folder = os.path.join(os.getcwd(),'01_data', '01_preprocessed')
 path_model_train = os.path.join(base_folder, 'model_train.pkl')
 path_model_dev = os.path.join(base_folder, 'model_dev.pkl')
 path_model_test = os.path.join(base_folder, 'model_test.pkl')
-input_path_tok_2_id = os.path.join(base_folder, 'tok_2_id')
-input_path_id_2_embed = os.path.join(base_folder, 'id_2_embed')
+input_path_tok_2_id = os.path.join(base_folder, 'tok_2_id_dict.pkl')
+input_path_id_2_embed = os.path.join(base_folder, 'id_2_embed_dict.pkl')
 
 #%% Variable initialization
 
-n_epochs = 5
+n_epochs = 20
 seed = 1234
 max_seq_len = 512
-batch_size = 20
-embed_dim = 128
+batch_size = 5
+embed_dim = 200
 input_size = embed_dim
 hidden_size = 64
 output_size = 1
@@ -191,6 +219,7 @@ learning_rate = 0.001
 momentum = 0.9
 wd = 0.00001
 use_cuda = True
+pad_idx = 0
 
 #%% Load data
 
@@ -200,19 +229,9 @@ with open(input_path_tok_2_id, 'rb') as fr:
 with open(input_path_id_2_embed, 'rb') as fr:
     id_2_embed = pickle.load(fr)
 
-#with open(path_model_train, 'rb') as fr:
-#    model_train = pickle.load(fr)
-
-#with open(path_model_dev, 'rb') as fr:
-#    model_dev = pickle.load(fr)
-
-#with open(path_model_test, 'rb') as fr:
-#    model_test = pickle.load(fr)
-
 model_train = pd.read_pickle(path_model_train)
 model_dev = pd.read_pickle(path_model_dev)
 model_test = pd.read_pickle(path_model_test)
-
 
 #%% Instantiate dataclasses
 
@@ -230,9 +249,9 @@ test_dl = DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
 vocab_size = len(id_2_embed)
 seq_len = 512 * 6
-model = ECHR_model(vocab_size=vocab_size, embed_dim=embed_dim,
-                   pad_idx=0, input_size=input_size,
-                   hidden_size=hidden_size, ouput_size=output_size)
+pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
+model = ECHR_model(vocab_size, embed_dim, pad_idx, input_size,
+                   hidden_size, output_size, pretrained_embeddings)
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():

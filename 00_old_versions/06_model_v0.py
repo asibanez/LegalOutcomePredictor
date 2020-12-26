@@ -2,6 +2,7 @@
 import os
 import pickle
 import torch
+import pandas as pd
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -102,7 +103,6 @@ def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
     train_acc = 0
     total_entries = 0
     sum_train_loss = 0
-
     
     for X, Y in tqdm(train_dl, total = len(train_dl)):
         
@@ -128,6 +128,8 @@ def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
         total_entries += current_batch_size
         sum_train_loss += (loss.item() * current_batch_size)
         
+        #print("loss = ", loss.item())
+
     avg_train_loss = sum_train_loss / total_entries
     train_loss_history.append(avg_train_loss)
     
@@ -177,10 +179,10 @@ input_path_id_2_embed = os.path.join(base_folder, 'id_2_embed')
 
 #%% Variable initialization
 
-n_epochs = 20
+n_epochs = 5
 seed = 1234
 max_seq_len = 512
-batch_size = 5
+batch_size = 20
 embed_dim = 128
 input_size = embed_dim
 hidden_size = 64
@@ -198,14 +200,19 @@ with open(input_path_tok_2_id, 'rb') as fr:
 with open(input_path_id_2_embed, 'rb') as fr:
     id_2_embed = pickle.load(fr)
 
-with open(path_model_train, 'rb') as fr:
-    model_train = pickle.load(fr)
+#with open(path_model_train, 'rb') as fr:
+#    model_train = pickle.load(fr)
 
-with open(path_model_dev, 'rb') as fr:
-    model_dev = pickle.load(fr)
+#with open(path_model_dev, 'rb') as fr:
+#    model_dev = pickle.load(fr)
 
-with open(path_model_test, 'rb') as fr:
-    model_test = pickle.load(fr)
+#with open(path_model_test, 'rb') as fr:
+#    model_test = pickle.load(fr)
+
+model_train = pd.read_pickle(path_model_train)
+model_dev = pd.read_pickle(path_model_dev)
+model_test = pd.read_pickle(path_model_test)
+
 
 #%% Instantiate dataclasses
 
