@@ -38,8 +38,8 @@ class ECHR_dataset(Dataset):
         case_texts_tokens = [x[:max_seq_len] for x in case_texts_tokens]
         
         # Pad sequences to max seq len
-        art_text_tokens = art_text_tokens + ['<pad>'] * (max_seq_len - len(art_text_tokens))
-        case_texts_tokens = [x + ['<pad>'] * (max_seq_len - len(x)) for x in case_texts_tokens]
+        art_text_tokens = art_text_tokens + ['<PAD>'] * (max_seq_len - len(art_text_tokens))
+        case_texts_tokens = [x + ['<PAD>'] * (max_seq_len - len(x)) for x in case_texts_tokens]
         
         # Flatten case_texts_tokens
         case_text_tokens_1D = [x for sublist in case_texts_tokens for x in sublist]
