@@ -1,11 +1,11 @@
 # Selects paragraphs from case descriptions
 # Tokenizes, prunes and pads sequences for article and paragraph texts
-
+#-----------------------------------------------
 # Input:  train, dev and test dataframes in pkl format
 #         token to ID dictionary in pkl format
 
 # Output: train, dev and test dataframes as model inputs:
-
+#-----------------------------------------------
 # v1 -> Generates tokenized text
 # v2 -> Saves dataframes in pkl format
 # v3 -> Bug fixed line 19: Pads top n articles to num_passages per case
@@ -14,6 +14,7 @@
 #       Adds random seed
 # v6 -> Adds conversion to IDs, sequence prunning and padding
 # v7 -> Saves case texts as flat token ID lists
+# v8 -> Adds bm25 paragraph selection option
 
 #%% Imports
 import os
@@ -26,12 +27,21 @@ from collections import defaultdict
 from imblearn.over_sampling import RandomOverSampler 
 
 #%% Function definitions
-def select_passage(num_passages_per_case, case_texts):
-    # Random selection
-    selected_passages = random.sample(case_texts,
+def select_passage(num_passages_per_case, case_texts, art_text_tokens, par_selection_method):
+
+    if par_selection_method == 'random':
+        selected_passages = random.sample(case_texts,
                                      min(num_passages_per_case, len(case_texts)))
+    elif par_selection_method == 'bm25':
+        
+    
     # Pad passages to desired length
     selected_passages += [''] * (num_passages_per_case - len(selected_passages)) 
+    
+    
+    else:
+        print('Error: Incorrect paragraph selection method')
+        exit()
     
     # Convert to lowercase and tokenize
     selected_passages_tokens = [nltk.word_tokenize(x.lower()) for x in selected_passages]
@@ -55,6 +65,7 @@ tok_2_id_path = os.path.join(input_folder, 'tok_2_id_dict.pkl')
 
 #%% Variable initialization
 
+par_selection_method = 'bm25' # Either 'bm25' or 'random'
 num_passages_per_case = 5 # Number of case paragraphs to be fed to the model
 num_articles = 67 # total number of articles in ECHR law
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6'] # Art headers to be skipped
@@ -79,7 +90,7 @@ case_test_df = pd.read_pickle(case_test_path)
 unk_id = tok_2_id['<UNK>']
 tok_2_id = defaultdict(lambda: unk_id, tok_2_id)
 
-#%% Merge case dataframes
+#%% Asess dataframe shapes
 
 print('shape case train = ', case_train_df.shape)
 print('shape case dev = ', case_dev_df.shape)
@@ -110,7 +121,8 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
     # Initialize outcomes to zero
     outcome = [0] * (num_articles - 1)
     # Select paragraphs from case and build list
-    selected_case_text_tokens = select_passage(num_passages_per_case, case_texts)
+    selected_case_text_tokens = select_passage(num_passages_per_case, case_texts,
+                                               art_text_tokens, par_selection_method)
     # Convert to IDs
     selected_case_text_ids = [[tok_2_id[token] for token in text] for text in selected_case_text_tokens]
     # Prune to seq len
