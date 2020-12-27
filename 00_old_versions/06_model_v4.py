@@ -2,6 +2,7 @@
 # v2 -> Splits LSTM into 2 (LSTM and case)
 # v3 -> Uses FastText embeddings
 # v4 -> Conversion to token IDs, prunning and padding moved to preprocessing
+#       Splits cases in 1st one and REST
 
 #%% Imports
 
@@ -21,7 +22,7 @@ class ECHR_dataset(Dataset):
     def __init__(self, data_df):
         self.article_tensor = torch.LongTensor(data_df['article_text'].to_list())
         self.cases_tensor = torch.LongTensor(data_df['case_texts'].to_list())
-        self.outcome_tensor = torch.LongTensor(data_df['outcome'].to_list())
+        self.outcome_tensor = torch.Tensor(data_df['outcome'].to_list())
         
     def __len__(self):
         return self.outcome_tensor.size()[0]
@@ -55,10 +56,10 @@ class ECHR_model(nn.Module):
                                  bidirectional = True,
                                  batch_first = True)
         
-        self.lstm_case_2 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
-                                 bidirectional = True,
-                                 batch_first = True)      
+        self.lstm_case_REST = nn.LSTM(input_size = input_size,
+                                      hidden_size = hidden_size,
+                                      bidirectional = True,
+                                      batch_first = True)      
         
         # Concatenate
         self.fc_1 = nn.Linear(in_features = 6 * hidden_size,
