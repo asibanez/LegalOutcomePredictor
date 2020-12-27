@@ -259,7 +259,6 @@ model = ECHR_model(input_size, hidden_size, output_size, pretrained_embeddings)
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
     print('moving model to cuda')
-    #model = model.cuda()
     model = model.to(device)
 
 print(model)
