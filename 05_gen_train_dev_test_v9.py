@@ -15,6 +15,7 @@
 # v6 -> Adds conversion to IDs, sequence prunning and padding
 # v7 -> Saves case texts as flat token ID lists
 # v8 -> Adds bm25 paragraph selection option
+# v9 -> Simplifies paragraph selection function to just select paragraphs
 
 #%% Imports
 import os
@@ -28,42 +29,32 @@ from collections import defaultdict
 from imblearn.over_sampling import RandomOverSampler 
 
 #%% Function definitions
-def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token_id,
-                           art_text_tok_list, par_selection_method):
+def select_passage(num_passages_per_case, case_texts, seq_len, pad_token_id,
+                   art_texts_tokens, par_selection_method):
 
-    selected_passages_ids_list = []
+    selected_passages_list = []
     
-    for art_text_tok in art_text_tok_list:
+    if par_selection_method == 'random':
+        selected_passages = random.sample(case_texts, min(num_passages_per_case, len(case_texts)))
+        # Build list
+        selected_passages_list = [selected_passages] * len(art_texts_tokens)
         
-        # Select passages
-        if par_selection_method == 'random':
-            selected_passages = random.sample(case_texts, min(num_passages_per_case, len(case_texts)))
-        
-        elif par_selection_method == 'bm25':
+    elif par_selection_method == 'bm25':
+        for art_text_tok in art_texts_tokens:
             tokenized_corpus = [doc.split(' ') for doc in case_texts]
             bm25 = BM25Okapi(tokenized_corpus)
             selected_passages = bm25.get_top_n(art_text_tok, case_texts, n = num_passages_per_case)    
-            
-        else:
-            print('Error: Incorrect paragraph selection method')
-            exit()
-            
-        # Convert to lowercase and tokenize passages
-        selected_passages_tok = [nltk.word_tokenize(x.lower()) for x in selected_passages]
-        # Convert to IDs
-        selected_passages_ids = [[tok_2_id[token] for token in text] for text in selected_passages_tok]
-        # Prune to seq len
-        selected_passages_ids = [x[:seq_len] for x in selected_passages_ids] 
-        # Pad to seq len
-        selected_passages_ids = [x + [pad_token_id] * (seq_len - len(x)) for x in selected_passages_ids]
-        # Flatten list of lists
-        selected_passages_ids = [x for sublist in selected_passages_ids for x in sublist]
+            # Build list    
+            selected_passages_list.append(selected_passages)
+        
         # Pad number of passages to desired length
-        selected_passages_ids_list += [''] * (num_passages_per_case - len(selected_passages_ids_list)) 
-        # build list    
-        selected_passages_ids_list.append(selected_passages_ids)
-
-    return selected_passages_ids_list
+        selected_passages_list += [''] * (num_passages_per_case - len(selected_passages_list)) 
+    
+    else:
+        print('Error: Incorrect paragraph selection method')
+        exit()
+    
+    return selected_passages_list
 
 #%% Path definition
 
@@ -116,15 +107,15 @@ print('shape case test = ', case_test_df.shape)
 #%% Convert articles to token IDs, prune and / or pad to seq len
 
 # Convert to IDs
-art_text_list = [ECHR_dict[x] for x in range(1, num_articles)]
-art_text_tok_list = [nltk.word_tokenize(x.lower()) for x in art_text_list]
-art_text_id_list = [[tok_2_id[token] for token in text] for text in art_text_tok_list]
+art_texts = [ECHR_dict[x] for x in range(1, num_articles)]
+art_texts_tokens = [nltk.word_tokenize(x.lower()) for x in art_texts]
+art_texts_ids = [[tok_2_id[token] for token in text] for text in art_texts_tokens]
 
 # Prune to seq len
-art_texts_id_list = [x[:seq_len] for x in art_text_id_list]
+art_texts_ids = [x[:seq_len] for x in art_texts_ids]
        
 # Pad to seq len
-art_text_id_list = [x + [pad_token_id] * (seq_len - len(x)) for x in art_text_id_list]
+art_texts_ids = [x + [pad_token_id] * (seq_len - len(x)) for x in art_texts_ids]
 
 
 #%% Restructure train data and convert tokens to ids
@@ -136,10 +127,23 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
     # Initialize outcomes to zero
-    outcome_list = [0] * (num_articles - 1)
+    outcome = [0] * (num_articles - 1)
     # Select paragraphs from case and build list
-    selected_case_passages_id_list = select_process_passage(num_passages_per_case, case_texts, seq_len,
-                                                            pad_token_id, art_text_tok_list, par_selection_method)
+    selected_case_passages = select_passage(num_passages_per_case, case_texts, seq_len,
+                                            pad_token_id, art_texts_tokens, par_selection_method)
+    
+    # Convert to lowercase and tokenize
+    selected_case_passages_tok = [nltk.word_tokenize(x.lower()) for x in selected_case_passages]    
+    # Convert to IDs
+    selected_case_passages_ids = [[tok_2_id[token] for token in text] for text in selected_case_passages_tok]
+    # Prune to seq len
+    selected_case_passages_ids = [x[:seq_len] for x in selected_case_passages_ids]       
+    # Pad to seq len
+    selected_case_passages_ids = [x + [pad_token_id] * (seq_len - len(x)) for x in selected_case_passages_ids]
+    # Flatten list of lists
+    selected_case_passages_ids = [x for sublist in selected_case_passages_ids for x in sublist]
+    # build list    
+    selected_case_texts_ids = [selected_case_text_ids] * 66
     
     # Iterate over violated article list
     for violated_art_id in violated_art_ids:
@@ -148,11 +152,11 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
             continue
         violated_art_id = int(violated_art_id)
         # Update corresponding outcome label
-        outcome_list[violated_art_id] = 1
+        outcome[violated_art_id] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_texts_id_list,
-                           'case_texts': selected_case_passages_id_list,
-                           'outcome': outcome_list})
+    aux_df = pd.DataFrame({'article_text':art_texts_ids,
+                           'case_texts': selected_case_texts_ids,
+                           'outcome': outcome})
                            
     str_data_train = pd.concat([str_data_train, aux_df], axis = 0,
                                ignore_index = True)
