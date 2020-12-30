@@ -122,7 +122,7 @@ art_text_tok_list = [nltk.word_tokenize(x.lower()) for x in art_text_list]
 art_text_id_list = [[tok_2_id[token] for token in text] for text in art_text_tok_list]
 
 # Prune to seq len
-art_texts_id_list = [x[:seq_len] for x in art_text_id_list]
+art_text_id_list = [x[:seq_len] for x in art_text_id_list]
        
 # Pad to seq len
 art_text_id_list = [x + [pad_token_id] * (seq_len - len(x)) for x in art_text_id_list]
@@ -133,7 +133,7 @@ art_text_id_list = [x + [pad_token_id] * (seq_len - len(x)) for x in art_text_id
 ###
 #case_train_df = case_train_df[0:100] # Slice for debugging
 ###
-"""
+
 str_data_train = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
 
 # Iterate over cases to build dataframe
@@ -155,13 +155,13 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
         # Update corresponding outcome label
         outcome_list[violated_art_id] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_texts_id_list,
+    aux_df = pd.DataFrame({'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
     str_data_train = pd.concat([str_data_train, aux_df], axis = 0,
                                ignore_index = True)
-"""
+
 #%% Restructure dev data and convert tokens to ids
 
 ###
@@ -189,7 +189,7 @@ for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
         # Update corresponding outcome label
         outcome_list[violated_art_id] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_texts_id_list,
+    aux_df = pd.DataFrame({'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
@@ -223,7 +223,7 @@ for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
         # Update corresponding outcome label
         outcome_list[violated_art_id] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_texts_id_list,
+    aux_df = pd.DataFrame({'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
@@ -231,7 +231,7 @@ for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
                                ignore_index = True)
 
 #%% Oversample train data
-"""
+
 x_train = pd.DataFrame(str_data_train[['article_text', 'case_texts']])
 y_train = pd.DataFrame(str_data_train['outcome']).astype('int')
 
@@ -239,14 +239,14 @@ random_oversampler = RandomOverSampler(random_state = seed)
 x_train_res, y_train_res = random_oversampler.fit_resample(x_train, y_train)
 
 str_data_train = pd.concat([x_train_res, y_train_res], axis = 1)
-"""
+
      
 #%% Save train, dev, test dataframes
 
-#print('shape train = ', str_data_train.shape)
+print('shape train = ', str_data_train.shape)
 print('shape dev = ', str_data_dev.shape)
 print('shape test = ', str_data_test.shape)
 
-#str_data_train.to_pickle(output_path_train)
+str_data_train.to_pickle(output_path_train)
 str_data_dev.to_pickle(output_path_dev)
 str_data_test.to_pickle(output_path_test)
