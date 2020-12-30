@@ -56,10 +56,11 @@ def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token
         selected_passages_ids = [x[:seq_len] for x in selected_passages_ids] 
         # Pad to seq len
         selected_passages_ids = [x + [pad_token_id] * (seq_len - len(x)) for x in selected_passages_ids]
+        # Pad number of passages to desired length
+        selected_passages_ids += [''] * (num_passages_per_case - len(selected_passages_ids)) 
         # Flatten list of lists
         selected_passages_ids = [x for sublist in selected_passages_ids for x in sublist]
-        # Pad number of passages to desired length
-        selected_passages_ids_list += [''] * (num_passages_per_case - len(selected_passages_ids_list)) 
+
         # build list    
         selected_passages_ids_list.append(selected_passages_ids)
 
