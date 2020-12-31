@@ -227,43 +227,6 @@ def val_epoch_func(model, criterion, dev_dl, val_loss_history):
     
     return avg_loss, accuracy, val_loss_history
 
-#%% Test function
-"""
-def test_func(model, criterion, test_dl):
-    model.eval()
-    test_acc = 0
-    sum_correct = 0
-    sum_test_loss = 0
-    total_entries = 0
-    full_prediction = []
-
-    for X_art, X_case, Y in test_dl:
-        
-        # Move to cuda
-        if next(model.parameters()).is_cuda:
-            X_art = X_art.to(device)
-            X_case = X_case.to(device)
-            Y = Y.to(device)
-        
-        # Compute predictions:
-        pred = model(X_art, X_case).view(-1)
-        loss = criterion(pred, Y)
-        
-        # Book-keeping
-        current_batch_size = X_art.size()[0]
-        total_entries += current_batch_size
-        sum_test_loss += (loss.item() * current_batch_size)
-        pred = torch.round(pred.view(pred.shape[0]))
-        sum_correct += (pred == Y).sum().item()             
-    
-    avg_loss = sum_val_loss / total_entries
-    accuracy = sum_correct / total_entries
-    val_loss_history.append(avg_loss)
-    print("valid loss %.3f and accuracy %.3f" % (avg_loss, accuracy))
-    
-    return avg_loss, accuracy, val_loss_history
-"""
-
 #%% Path definition
 
 base_folder = os.path.join(os.getcwd(),'01_data', '01_preprocessed') 
@@ -277,7 +240,7 @@ input_path_id_2_embed = os.path.join(base_folder, 'id_2_embed_dict.pkl')
 n_epochs = 20
 seed = 1234
 max_seq_len = 512
-batch_size = 5
+batch_size = 1800
 embed_dim = 200
 input_size = embed_dim
 hidden_size = 64
@@ -302,9 +265,9 @@ model_test = pd.read_pickle(path_model_test)
 print('Done')
 
 ###------------------------------------------------------
-model_train = model_train[0:50]
-model_dev = model_dev[0:int(50 * 0.2)]
-model_test = model_test[0:int(50 * 0.2)]
+#model_train = model_train[0:50]
+#model_dev = model_dev[0:int(50 * 0.2)]
+#model_test = model_test[0:int(50 * 0.2)]
 ###------------------------------------------------------
 
 #%% Instantiate dataclasses
@@ -337,7 +300,10 @@ print(model)
 
 #%% Instantiate optimizer & criterion
 
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+#optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate,
+#                             weight_decay = wd, momentum = momentum)
+optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate,
+                            momentum = momentum)
 criterion = nn.BCELoss()
 
 #%% Training
@@ -351,6 +317,3 @@ for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
     print("training loss: ", train_loss)
     _, _, val_loss_history = val_epoch_func(model, criterion, dev_dl, val_loss_history)
 
-#%% Testing
-
-#test_func(model, criterion, test_dl)
