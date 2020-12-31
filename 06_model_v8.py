@@ -9,6 +9,7 @@
 # v7 -> Test function added
 #       Metric computations added
 #       Saves model and results history
+# v8 -> Adds attention layers
 
 #%% Imports
 
