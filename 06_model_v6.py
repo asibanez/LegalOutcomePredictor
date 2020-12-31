@@ -3,8 +3,9 @@
 # v3 -> Uses FastText embeddings
 # v4 -> Conversion to token IDs, prunning and padding moved to preprocessing
 # v5 -> Splits cases in 5 different LSTMs
-# v6 -> Sigmoid function introduced. Loss function changed from
-#       nn.BCEWithLogitsLoss() to 
+# v6 -> Sigmoid function introduced.
+#       Loss function changed from nn.BCEWithLogitsLoss() to nn.BCE()
+#       Dropout added to LSTMS
 
 #%% Imports
 
@@ -17,7 +18,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
 # Function definition
-#%% DataClass
+#%% DataClass definition
 
 class ECHR_dataset(Dataset):
     def __init__(self, data_df):
@@ -35,50 +36,65 @@ class ECHR_dataset(Dataset):
         
         return X_article, X_cases, Y
 
-#%% Model
+#%% Model definition
 
 class ECHR_model(nn.Module):
     
-    def __init__(self, input_size, hidden_size, ouput_size, pretrained_embeddings):
+    def __init__(self, input_size, hidden_size, ouput_size, pretrained_embeddings, dropout):
         super(ECHR_model, self).__init__()
+
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.dropout = dropout
+        self.num_layers = 1
 
         # Embedding
         self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
         
+        # Dropout
+        self.drops = nn.Dropout(self.dropout)
+        
         # Encode article
-        self.lstm_art = nn.LSTM(input_size = input_size,
-                                hidden_size = hidden_size,
+        self.lstm_art = nn.LSTM(input_size = self.input_size,
+                                hidden_size = self.hidden_size,
+                                num_layers = self.num_layers,
                                 bidirectional = True,
                                 batch_first = True)      
         
         # Encode cases
-        self.lstm_case_1 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
+        self.lstm_case_1 = nn.LSTM(input_size = self.input_size,
+                                 hidden_size = self.hidden_size,
+                                 num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)
         
-        self.lstm_case_2 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
+        self.lstm_case_2 = nn.LSTM(input_size = self.input_size,
+                                 hidden_size = self.hidden_size,
+                                 num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.lstm_case_3 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
+        self.lstm_case_3 = nn.LSTM(input_size = self.input_size,
+                                 hidden_size = self.hidden_size,
+                                 num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.lstm_case_4 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
+        self.lstm_case_4 = nn.LSTM(input_size = self.input_size,
+                                 hidden_size = self.hidden_size,
+                                 num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.lstm_case_5 = nn.LSTM(input_size = input_size,
-                                 hidden_size = hidden_size,
+        self.lstm_case_5 = nn.LSTM(input_size = self.input_size,
+                                 hidden_size = self.hidden_size,
+                                 num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.fc_1 = nn.Linear(in_features = 12 * hidden_size,
-                              out_features = 1)
+        self.fc_1 = nn.Linear(in_features = 12 * self.hidden_size,
+                              out_features = self.output_size)
         
         self.sigmoid = nn.Sigmoid()
         
@@ -92,32 +108,38 @@ class ECHR_model(nn.Module):
         x_art_fwd = x_art[0][:, -1, 0:64]
         x_art_bkwd = x_art[0][:, 0, 64:128]
         x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)
+        x_art = self.drops(x_art)
         
         # LSTM cases
         x_case_1 = self.lstm_case_1(x_case[:, 0:512, :])
         x_case_1_fwd = x_case_1[0][:, -1, 0:64]
         x_case_1_bkwd = x_case_1[0][:, 0, 64:128]
         x_case_1 = torch.cat((x_case_1_fwd, x_case_1_bkwd), dim = 1)
+        x_case_1 = self.drops(x_case_1)
         
         x_case_2 = self.lstm_case_1(x_case[:, 512:1024, :])
         x_case_2_fwd = x_case_2[0][:, -1, 0:64]
         x_case_2_bkwd = x_case_2[0][:, 0, 64:128]
         x_case_2 = torch.cat((x_case_2_fwd, x_case_2_bkwd), dim = 1)
+        x_case_2 = self.drops(x_case_2)
         
         x_case_3 = self.lstm_case_1(x_case[:, 1024:1536, :])
         x_case_3_fwd = x_case_3[0][:, -1, 0:64]
         x_case_3_bkwd = x_case_3[0][:, 0, 64:128]
         x_case_3 = torch.cat((x_case_3_fwd, x_case_3_bkwd), dim = 1)
+        x_case_3 = self.drops(x_case_3)
         
         x_case_4 = self.lstm_case_1(x_case[:, 1536:2048, :])
         x_case_4_fwd = x_case_4[0][:, -1, 0:64]
         x_case_4_bkwd = x_case_4[0][:, 0, 64:128]
         x_case_4 = torch.cat((x_case_4_fwd, x_case_4_bkwd), dim = 1)
+        x_case_4 = self.drops(x_case_4)
         
         x_case_5 = self.lstm_case_1(x_case[:, 2048:2560, :])
         x_case_5_fwd = x_case_5[0][:, -1, 0:64]
         x_case_5_bkwd = x_case_5[0][:, 0, 64:128]
         x_case_5 = torch.cat((x_case_5_fwd, x_case_5_bkwd), dim = 1)
+        x_case_5 = self.drops(x_case_5)
         
         # Concatenate article & passages
         x = torch.cat((x_art, x_case_1, x_case_2, x_case_3, x_case_4,
@@ -205,6 +227,43 @@ def val_epoch_func(model, criterion, dev_dl, val_loss_history):
     
     return avg_loss, accuracy, val_loss_history
 
+#%% Test function
+"""
+def test_func(model, criterion, test_dl):
+    model.eval()
+    test_acc = 0
+    sum_correct = 0
+    sum_test_loss = 0
+    total_entries = 0
+    full_prediction = []
+
+    for X_art, X_case, Y in test_dl:
+        
+        # Move to cuda
+        if next(model.parameters()).is_cuda:
+            X_art = X_art.to(device)
+            X_case = X_case.to(device)
+            Y = Y.to(device)
+        
+        # Compute predictions:
+        pred = model(X_art, X_case).view(-1)
+        loss = criterion(pred, Y)
+        
+        # Book-keeping
+        current_batch_size = X_art.size()[0]
+        total_entries += current_batch_size
+        sum_test_loss += (loss.item() * current_batch_size)
+        pred = torch.round(pred.view(pred.shape[0]))
+        sum_correct += (pred == Y).sum().item()             
+    
+    avg_loss = sum_val_loss / total_entries
+    accuracy = sum_correct / total_entries
+    val_loss_history.append(avg_loss)
+    print("valid loss %.3f and accuracy %.3f" % (avg_loss, accuracy))
+    
+    return avg_loss, accuracy, val_loss_history
+"""
+
 #%% Path definition
 
 base_folder = os.path.join(os.getcwd(),'01_data', '01_preprocessed') 
@@ -228,6 +287,7 @@ momentum = 0.9
 wd = 0.00001
 use_cuda = True
 pad_idx = 0
+dropout = 0.4
 device = torch.device('cuda:3')
 
 #%% Load data
@@ -266,7 +326,7 @@ print('Done')
 #%% Instantiate model
 
 pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
-model = ECHR_model(input_size, hidden_size, output_size, pretrained_embeddings)
+model = ECHR_model(input_size, hidden_size, output_size, pretrained_embeddings, dropout)
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
@@ -291,4 +351,6 @@ for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
     print("training loss: ", train_loss)
     _, _, val_loss_history = val_epoch_func(model, criterion, dev_dl, val_loss_history)
 
-#%%
+#%% Testing
+
+#test_func(model, criterion, test_dl)
