@@ -48,14 +48,15 @@ class ECHR_dataset(Dataset):
 
 class ECHR_model(nn.Module):
     
-    def __init__(self, input_size, hidden_size, ouput_size, pretrained_embeddings, dropout):
+    def __init__(self, input_size, hidden_dim, ouput_size, pretrained_embeddings, dropout):
         super(ECHR_model, self).__init__()
 
         self.input_size = input_size
-        self.hidden_size = hidden_size
+        self.hidden_dim = hidden_dim
         self.output_size = output_size
         self.dropout = dropout
         self.num_layers = 1
+        self.att_dim = 50
 
         # Embedding
         self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
@@ -65,93 +66,140 @@ class ECHR_model(nn.Module):
         
         # Encode article
         self.lstm_art = nn.LSTM(input_size = self.input_size,
-                                hidden_size = self.hidden_size,
+                                hidden_size = self.hidden_dim,
                                 num_layers = self.num_layers,
                                 bidirectional = True,
                                 batch_first = True)      
         
         # Encode cases
         self.lstm_case_1 = nn.LSTM(input_size = self.input_size,
-                                 hidden_size = self.hidden_size,
+                                 hidden_size = self.hidden_dim,
                                  num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)
         
         self.lstm_case_2 = nn.LSTM(input_size = self.input_size,
-                                 hidden_size = self.hidden_size,
+                                 hidden_size = self.hidden_dim,
                                  num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
         self.lstm_case_3 = nn.LSTM(input_size = self.input_size,
-                                 hidden_size = self.hidden_size,
+                                 hidden_size = self.hidden_dim,
                                  num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
         self.lstm_case_4 = nn.LSTM(input_size = self.input_size,
-                                 hidden_size = self.hidden_size,
+                                 hidden_size = self.hidden_dim,
                                  num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
         self.lstm_case_5 = nn.LSTM(input_size = self.input_size,
-                                 hidden_size = self.hidden_size,
+                                 hidden_size = self.hidden_dim,
                                  num_layers = self.num_layers,
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.fc_1 = nn.Linear(in_features = 12 * self.hidden_size,
+        self.fc_query = nn.Linear(in_features = self.hidden_dim * 2,
+                                  out_features = self.att_dim)
+        
+        self.fc_context_1 = nn.Linear(in_features = self.hidden_dim * 2,
+                                      out_features = self.att_dim)
+        
+        self.fc_context_2 = nn.Linear(in_features = self.hidden_dim * 2,
+                                      out_features = self.att_dim)
+        
+        self.fc_context_3 = nn.Linear(in_features = self.hidden_dim * 2,
+                                      out_features = self.att_dim)
+        
+        self.fc_context_4 = nn.Linear(in_features = self.hidden_dim * 2,
+                                      out_features = self.att_dim)
+        
+        self.fc_context_5 = nn.Linear(in_features = self.hidden_dim * 2,
+                                      out_features = self.att_dim)
+        
+        self.fc_1 = nn.Linear(in_features = 6 * 2 * self.hidden_dim,
                               out_features = self.output_size)
         
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, X_art, X_case):
         # Embedding
-        x_art = self.embed(X_art)
-        x_case = self.embed(X_case)
+        x_art = self.embed(X_art)                             # batch_size x seq_len x embed_dim
+        x_case = self.embed(X_case)                           # batch_size x (seq_len x 5) x embed_dim
         
-        # LSTM article
-        x_art = self.lstm_art(x_art)
-        x_art_fwd = x_art[0][:, -1, 0:64]
-        x_art_bkwd = x_art[0][:, 0, 64:128]
-        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)
-        x_art = self.drops(x_art)
+        # Encoding article
+        x_art = self.lstm_art(x_art)                          # tuple len = 2
+        x_art_fwd = x_art[0][:, -1, 0:64]                     # batch_size x hidden_dim
+        x_art_bkwd = x_art[0][:, 0, 64:128]                   # batch_size x hidden_dim
+        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)   # batch_size x (hidden_dim x 2)
+        x_art = self.drops(x_art)                             # batch_size x (hidden_dim x 2)
         
-        # LSTM cases
-        x_case_1 = self.lstm_case_1(x_case[:, 0:512, :])
-        x_case_1_fwd = x_case_1[0][:, -1, 0:64]
-        x_case_1_bkwd = x_case_1[0][:, 0, 64:128]
-        x_case_1 = torch.cat((x_case_1_fwd, x_case_1_bkwd), dim = 1)
-        x_case_1 = self.drops(x_case_1)
+        # Query vector
+        query_v = self.fc_query(x_art).unsqueeze(2)           # batch_size x att_dim x 1
+                
+        # Case 1
+        # Encoding
+        x_case_1 = self.lstm_case_1(x_case[:,0:512,:])[0]     # batch_size x seq_len x (hidden_dim x 2)
+        x_case_1 = self.drops(x_case_1)                       # batch_size x seq_len x (hidden_dim x 2)
+        # Attention
+        proj_c_1 = torch.tanh(self.fc_context_1(x_case_1))    # batch_size x seq_len x att_dim
+        alpha_c_1 = torch.bmm(proj_c_1, query_v)              # batch _size x seq_len x 1
+        alpha_c_1 = torch.softmax(alpha_c_1, dim = 1)         # batch_size x seq_len x 1
+        att_output_c_1 = x_case_1 * alpha_c_1                 # batch_size x seq_len x (hidden_dim x 2)
+        att_output_c_1 = torch.sum(att_output_c_1,axis = 1)   # batch_size x (hidden_dim x 2)
         
-        x_case_2 = self.lstm_case_1(x_case[:, 512:1024, :])
-        x_case_2_fwd = x_case_2[0][:, -1, 0:64]
-        x_case_2_bkwd = x_case_2[0][:, 0, 64:128]
-        x_case_2 = torch.cat((x_case_2_fwd, x_case_2_bkwd), dim = 1)
-        x_case_2 = self.drops(x_case_2)
         
-        x_case_3 = self.lstm_case_1(x_case[:, 1024:1536, :])
-        x_case_3_fwd = x_case_3[0][:, -1, 0:64]
-        x_case_3_bkwd = x_case_3[0][:, 0, 64:128]
-        x_case_3 = torch.cat((x_case_3_fwd, x_case_3_bkwd), dim = 1)
-        x_case_3 = self.drops(x_case_3)
+        # Case 2
+        # Encoding
+        x_case_2 = self.lstm_case_2(x_case[:,512:1024,:])[0]  # batch_size x seq_len x (hidden_dim x 2)
+        x_case_2 = self.drops(x_case_2)                       # batch_size x seq_len x (hidden_dim x 2)
+        # Attention
+        proj_c_2 = torch.tanh(self.fc_context_2(x_case_2))    # batch_size x seq_len x att_dim
+        alpha_c_2 = torch.bmm(proj_c_2, query_v)              # batch _size x seq_len x 1
+        alpha_c_2 = torch.softmax(alpha_c_2, dim = 1)         # batch_size x seq_len x 1
+        att_output_c_2 = x_case_2 * alpha_c_2                 # batch_size x seq_len x (hidden_dim x 2)
+        att_output_c_2 = torch.sum(att_output_c_2,axis = 1)   # batch_size x (hidden_dim x 2)
+                
+        # Case 3
+        # Encoding
+        x_case_3 = self.lstm_case_3(x_case[:,1024:1536,:])[0] # batch_size x seq_len x (hidden_dim x 2)
+        x_case_3 = self.drops(x_case_3)                       # batch_size x seq_len x (hidden_dim x 2)
+        # Attention
+        proj_c_3 = torch.tanh(self.fc_context_3(x_case_3))    # batch_size x seq_len x att_dim
+        alpha_c_3 = torch.bmm(proj_c_3, query_v)              # batch _size x seq_len x 1
+        alpha_c_3 = torch.softmax(alpha_c_3, dim = 1)         # batch_size x seq_len x 1
+        att_output_c_3 = x_case_3 * alpha_c_3                 # batch_size x seq_len x (hidden_dim x 2)
+        att_output_c_3 = torch.sum(att_output_c_3,axis = 1)   # batch_size x (hidden_dim x 2)
+
+        # Case 4
+        # Encoding
+        x_case_4 = self.lstm_case_4(x_case[:,1536:2048,:])[0] # batch_size x seq_len x (hidden_dim x 2)
+        x_case_4 = self.drops(x_case_4)                       # batch_size x seq_len x (hidden_dim x 2)
+        # Attention
+        proj_c_4 = torch.tanh(self.fc_context_4(x_case_4))    # batch_size x seq_len x att_dim
+        alpha_c_4 = torch.bmm(proj_c_4, query_v)              # batch _size x seq_len x 1
+        alpha_c_4 = torch.softmax(alpha_c_4, dim = 1)         # batch_size x seq_len x 1
+        att_output_c_4 = x_case_4 * alpha_c_4                 # batch_size x seq_len x (hidden_dim x 2)
+        att_output_c_4 = torch.sum(att_output_c_4,axis = 1)   # batch_size x (hidden_dim x 2)
+    
+        # Case 5
+        # Encoding
+        x_case_5 = self.lstm_case_5(x_case[:,2048:2560,:])[0] # batch_size x seq_len x (hidden_dim x 2)
+        x_case_5 = self.drops(x_case_5)                       # batch_size x seq_len x (hidden_dim x 2)
+        # Attention
+        proj_c_5 = torch.tanh(self.fc_context_5(x_case_5))    # batch_size x seq_len x att_dim
+        alpha_c_5 = torch.bmm(proj_c_5, query_v)              # batch _size x seq_len x 1
+        alpha_c_5 = torch.softmax(alpha_c_5, dim = 1)         # batch_size x seq_len x 1
+        att_output_c_5 = x_case_5 * alpha_c_5                 # batch_size x seq_len x (hidden_dim x 2)
+        att_output_c_5 = torch.sum(att_output_c_5,axis = 1)   # batch_size x (hidden_dim x 2)
         
-        x_case_4 = self.lstm_case_1(x_case[:, 1536:2048, :])
-        x_case_4_fwd = x_case_4[0][:, -1, 0:64]
-        x_case_4_bkwd = x_case_4[0][:, 0, 64:128]
-        x_case_4 = torch.cat((x_case_4_fwd, x_case_4_bkwd), dim = 1)
-        x_case_4 = self.drops(x_case_4)
-        
-        x_case_5 = self.lstm_case_1(x_case[:, 2048:2560, :])
-        x_case_5_fwd = x_case_5[0][:, -1, 0:64]
-        x_case_5_bkwd = x_case_5[0][:, 0, 64:128]
-        x_case_5 = torch.cat((x_case_5_fwd, x_case_5_bkwd), dim = 1)
-        x_case_5 = self.drops(x_case_5)
-        
-        # Concatenate article & passages
-        x = torch.cat((x_art, x_case_1, x_case_2, x_case_3, x_case_4,
-                       x_case_5), dim = 1)
+        # Concatenate article & passage encodings
+        x = torch.cat((x_art, att_output_c_1, att_output_c_2,
+                       att_output_c_3, att_output_c_4, att_output_c_5),
+                      dim = 1)                                # batch size x (6 x hidden_dim x 2)
         
         # Fully connected layer
         x = self.fc_1(x)
@@ -280,7 +328,7 @@ max_seq_len = 512
 batch_size = 5
 embed_dim = 200
 input_size = embed_dim
-hidden_size = 64
+hidden_dim = 64
 output_size = 1
 learning_rate = 0.001
 momentum = 0.9
@@ -326,7 +374,7 @@ print('Done')
 #%% Instantiate model
 
 pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
-model = ECHR_model(input_size, hidden_size, output_size, pretrained_embeddings, dropout)
+model = ECHR_model(input_size, hidden_dim, output_size, pretrained_embeddings, dropout)
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
@@ -375,7 +423,7 @@ print(f'AUC: {auc:.3f}\n')
 
 #%% Plot ROC curve
 fpr, tpr, threshold_roc = roc_curve(Y_ground_truth, Y_predicted_score)
-plt.plot(fpr, tpr, linestyle='--', label='Neural model')
+plt.plot(fpr, tpr, linestyle='--', label='Model')
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.legend(loc = 'lower right')
@@ -384,7 +432,7 @@ plt.show()
 
 #%% Plot Precision - recall curve
 precision_model, recall_model, threshold = precision_recall_curve(Y_ground_truth, Y_predicted_score)
-plt.plot(recall_model, precision_model, linestyle='--', label='Neural Model')
+plt.plot(recall_model, precision_model, linestyle='--', label='Model')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.legend(loc = 'lower left')

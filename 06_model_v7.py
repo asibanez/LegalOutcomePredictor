@@ -124,25 +124,25 @@ class ECHR_model(nn.Module):
         x_case_1 = torch.cat((x_case_1_fwd, x_case_1_bkwd), dim = 1)
         x_case_1 = self.drops(x_case_1)
         
-        x_case_2 = self.lstm_case_1(x_case[:, 512:1024, :])
+        x_case_2 = self.lstm_case_2(x_case[:, 512:1024, :])
         x_case_2_fwd = x_case_2[0][:, -1, 0:64]
         x_case_2_bkwd = x_case_2[0][:, 0, 64:128]
         x_case_2 = torch.cat((x_case_2_fwd, x_case_2_bkwd), dim = 1)
         x_case_2 = self.drops(x_case_2)
         
-        x_case_3 = self.lstm_case_1(x_case[:, 1024:1536, :])
+        x_case_3 = self.lstm_case_3(x_case[:, 1024:1536, :])
         x_case_3_fwd = x_case_3[0][:, -1, 0:64]
         x_case_3_bkwd = x_case_3[0][:, 0, 64:128]
         x_case_3 = torch.cat((x_case_3_fwd, x_case_3_bkwd), dim = 1)
         x_case_3 = self.drops(x_case_3)
         
-        x_case_4 = self.lstm_case_1(x_case[:, 1536:2048, :])
+        x_case_4 = self.lstm_case_4(x_case[:, 1536:2048, :])
         x_case_4_fwd = x_case_4[0][:, -1, 0:64]
         x_case_4_bkwd = x_case_4[0][:, 0, 64:128]
         x_case_4 = torch.cat((x_case_4_fwd, x_case_4_bkwd), dim = 1)
         x_case_4 = self.drops(x_case_4)
         
-        x_case_5 = self.lstm_case_1(x_case[:, 2048:2560, :])
+        x_case_5 = self.lstm_case_5(x_case[:, 2048:2560, :])
         x_case_5_fwd = x_case_5[0][:, -1, 0:64]
         x_case_5_bkwd = x_case_5[0][:, 0, 64:128]
         x_case_5 = torch.cat((x_case_5_fwd, x_case_5_bkwd), dim = 1)
