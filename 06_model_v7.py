@@ -268,15 +268,15 @@ path_model_train = os.path.join(base_folder, '01_preprocessed','model_train.pkl'
 path_model_dev = os.path.join(base_folder, '01_preprocessed', 'model_dev.pkl')
 path_model_test = os.path.join(base_folder, '01_preprocessed', 'model_test.pkl')
 input_path_id_2_embed = os.path.join(base_folder, '01_preprocessed', 'id_2_embed_dict.pkl')
-output_path_model = os.path.join(base_folder, '02_results', 'model.pt')
-output_path_results = os.path.join(base_folder, '02_results', 'results.pkl')
+output_path_model = os.path.join(base_folder, '02_results', '00_no_attention', 'model.pt')
+output_path_results = os.path.join(base_folder, '02_results', '00_no_attention', 'results.pkl')
 
 #%% Variable initialization
 
-n_epochs = 2
+n_epochs = 10
 seed = 1234
 max_seq_len = 512
-batch_size = 5
+batch_size = 1600
 embed_dim = 200
 input_size = embed_dim
 hidden_size = 64
@@ -287,7 +287,7 @@ wd = 0.00001
 use_cuda = True
 pad_idx = 0
 dropout = 0.4
-device = torch.device('cuda:3')
+device = torch.device('cuda:2')
 
 #%% Load data
 
@@ -301,9 +301,9 @@ model_test = pd.read_pickle(path_model_test)
 print('Done')
 
 ###------------------------------------------------------
-model_train = model_train[0:50]
-model_dev = model_dev[0:int(50 * 0.2)]
-model_test = model_test[0:int(50 * 0.2)]
+#model_train = model_train[0:50]
+#model_dev = model_dev[0:int(50 * 0.2)]
+#model_test = model_test[0:int(50 * 0.2)]
 ###------------------------------------------------------
 
 #%% Instantiate dataclasses
