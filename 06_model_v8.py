@@ -198,8 +198,8 @@ class ECHR_model(nn.Module):
         
         # Concatenate article & passage encodings
         x = torch.cat((x_art, att_output_c_1, att_output_c_2,
-                       att_output_c_3, att_output_c_4, att_output_c_5),
-                      dim = 1)                                # batch size x (6 x hidden_dim x 2)
+                       att_output_c_3, att_output_c_4,
+                       att_output_c_5), dim = 1)              # batch size x (6 x hidden_dim x 2)
         
         # Fully connected layer
         x = self.fc_1(x)

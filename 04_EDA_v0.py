@@ -1,8 +1,6 @@
 #%% Imports
 import os
 import nltk
-import tqdm
-import codecs
 import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,60 +9,72 @@ import matplotlib.pyplot as plt
 
 base_folder = os.getcwd()
 input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_path_= os.path.join(base_folder, '01_data', '01_preprocessed', 'corpus.txt')
 
-train_dev_test_files = ['case_EN_train', 'case_EN_dev', 'case_EN_test']
-ECHR_dict_path = os.path.join(input_folder, 'ECHR.dict')
-case_train_path = os.path.join(input_folder, 'case_EN_train')
-case_dev_path = os.path.join(input_folder, 'case_EN_dev')
-case_test_path = os.path.join(input_folder, 'case_EN_test')
+ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
+case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
+case_dev_path = os.path.join(input_folder, 'case_EN_dev_df.pkl')
+case_test_path = os.path.join(input_folder, 'case_EN_test_df.pkl')
 
 #%% Load data
 
 with open(ECHR_dict_path, 'rb') as fr:
     ECHR_dict = pickle.load(fr)
 
-with open(case_train_path, 'rb') as fr:
-    case_train_df = pickle.load(fr)
-
-with open(case_dev_path, 'rb') as fr:
-    case_dev_df = pickle.load(fr)
-
-with open(case_test_path, 'rb') as fr:
-    case_test_df = pickle.load(fr)
+case_train_df = pd.read_pickle(case_train_path)
+case_dev_df = pd.read_pickle(case_dev_path)
+case_test_df = pd.read_pickle(case_test_path)
 
 #%% Merge case dataframes
 
 print('shape case train = ', case_train_df.shape)
 print('shape case dev = ', case_dev_df.shape)
 print('shape case test = ', case_test_df.shape)
+
 case_all_df = pd.concat([case_train_df, case_dev_df, case_test_df], axis = 0)
 print('shape case all = ', case_all_df.shape)
 
 #%% EDA cases
 
 num_cases = len(case_all_df)
-case_passages = case_all_df.TEXT.to_list()
-case_text = [(' ').join(x) for x in  case_passages]
-case_tokens = [nltk.word_tokenize(x) for x in case_text]
+cases_passages = case_all_df.TEXT.to_list()
+cases_passages_tok = [[nltk.word_tokenize(x) for x in case_passages] for case_passages in cases_passages]
+all_passages_tok = [x for sublist in cases_passages_tok for x in sublist]
+cases_text_tok = [[x for sublist in passages for x in sublist] for passages in cases_passages_tok]
 
-num_passages_in_case = [len(x) for x in case_passages]
-num_tokens_in_case = [len(x) for x in case_tokens]
+num_passages = len(all_passages_tok)
+num_passages_per_case = [len(x) for x in cases_passages_tok]
+num_tokens_per_passage = [len(x) for x in all_passages_tok]
+num_tokens_per_case = [len(x) for x in cases_text_tok]
 
-print('max num passages in case = ', max(num_passages_in_case))
-print('max num tokens in case = ', max(num_tokens_in_case))
-print('avg num passages in case = ', sum(num_passages_in_case)/num_cases)
-print('avg num tokens in case = ', sum(num_tokens_in_case)/num_cases)
+#%%
+print('max num passages in case = ', max(num_passages_per_case))
+print('avg num passages in case = ', sum(num_passages_per_case)/num_cases)
 
+print('max num tokens in passage = ', max(num_tokens_per_passage))
+print('avg num tokens in passage = ', sum(num_tokens_per_passage)/num_passages)
+
+print('max num tokens in case = ', max(num_tokens_per_case))
+print('avg num tokens in case = ', sum(num_tokens_per_case)/num_cases)
+
+#%%
 fig = plt.figure()
-plt.hist(num_passages_in_case)
+plt.hist(num_passages_per_case, bins = 50)
 plt.xlabel('num passages in case')
 plt.ylabel('freq')
+plt.xlim(0, 500)
 plt.show()
 
 fig = plt.figure()
-plt.hist(num_tokens_in_case)
+plt.hist(num_tokens_per_passage, bins = 50)
+plt.xlabel('num tokens in passage')
+plt.ylabel('freq')
+plt.xlim(0, 1000)
+plt.show()
+
+fig = plt.figure()
+plt.hist(num_tokens_per_case, bins = 50)
 plt.xlabel('num tokens in case')
+plt.xlim(0, 30000)
 plt.ylabel('freq')
 plt.show()
 
