@@ -22,7 +22,7 @@ def compute_metrics(Y_ground_truth, Y_predicted_binary, Y_predicted_score):
 #%% Path definitions
 
 base_path = os.getcwd()
-input_path = os.path.join(base_path, '01_data', '02_runs','03_selected_arts', 'results.pkl')
+input_path = os.path.join(base_path, '01_data', '02_runs','04_no_art_text', 'results.pkl')
 
 #%% Read data
 
@@ -71,7 +71,7 @@ plt.plot(recall_model, precision_model, linestyle='--', label='Model')
 plt.plot(recall_rand, precision_rand, linestyle=':', label='Random')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plt.legend(loc = 'lower left')
+plt.legend(loc = 'upper right')
 plt.grid()
 plt.show()
 
