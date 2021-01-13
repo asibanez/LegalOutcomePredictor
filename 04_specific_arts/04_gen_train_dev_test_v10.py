@@ -6,17 +6,18 @@
 
 # Output: train, dev and test dataframes as model inputs:
 #-----------------------------------------------
-# v1 -> Generates tokenized text
-# v2 -> Saves dataframes in pkl format
-# v3 -> Bug fixed line 19: Pads top n articles to num_passages per case
-# v5 -> Adds oversampling to train dataset
-#       Uses pd.read_csv instead of pickle.load()
-#       Adds random seed
-# v6 -> Adds conversion to IDs, sequence prunning and padding
-# v7 -> Saves case texts as flat token ID lists
-# v8 -> Adds bm25 paragraph selection option and moves passage processing to
-#       select_process_passage function
-# v9 -> Fixed bug: adds empty passage when n_passages < 5
+# v1 ->  Generates tokenized text
+# v2 ->  Saves dataframes in pkl format
+# v3 ->  Bug fixed line 19: Pads top n articles to num_passages per case
+# v5 ->  Adds oversampling to train dataset
+#        Uses pd.read_csv instead of pickle.load()
+#        Adds random seed
+# v6 ->  Adds conversion to IDs, sequence prunning and padding
+# v7 ->  Saves case texts as flat token ID lists
+# v8 ->  Adds bm25 paragraph selection option and moves passage processing to
+#        select_process_passage function
+# v9 ->  Fixed bug: adds empty passage when n_passages < 5
+# v10 -> Allows to choose the ECHR articles to include in the model
 
 #%% Imports
 import os
@@ -70,11 +71,11 @@ def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token
 
 #%% Path definition
 
-base_folder = os.getcwd()
+base_folder = os.path.split(os.getcwd())[0]
 input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_path_train = os.path.join(base_folder, '01_data', '01_preprocessed', 'model_train.pkl')
-output_path_dev = os.path.join(base_folder, '01_data', '01_preprocessed', 'model_dev.pkl')
-output_path_test = os.path.join(base_folder, '01_data', '01_preprocessed', 'model_test.pkl')
+output_path_train = os.path.join(base_folder, '01_data', '02_runs', '03_selected_arts', 'model_train.pkl')
+output_path_dev = os.path.join(base_folder, '01_data', '02_runs', '03_selected_arts', 'model_dev.pkl')
+output_path_test = os.path.join(base_folder, '01_data', '02_runs', '03_selected_arts', 'model_test.pkl')
 
 ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
 case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
@@ -86,7 +87,9 @@ tok_2_id_path = os.path.join(input_folder, 'tok_2_id_dict.pkl')
 
 par_selection_method = 'bm25' # Either 'bm25' or 'random'
 num_passages_per_case = 5 # Number of case paragraphs to be fed to the model
-num_articles = 67 # total number of articles in ECHR law
+num_articles = 66 # total number of articles in ECHR law
+#article_list = [4, 5, 6, 7]
+article_list = [5]
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6'] # Art headers to be skipped
 pad_token_id = 0
 seq_len = 512
@@ -100,7 +103,7 @@ with open(ECHR_dict_path, 'rb') as fr:
 with open(tok_2_id_path, 'rb') as fr:
     tok_2_id = pickle.load(fr) 
 
-#case_train_df = pd.read_pickle(case_train_path)
+case_train_df = pd.read_pickle(case_train_path)
 case_dev_df = pd.read_pickle(case_dev_path)
 case_test_df = pd.read_pickle(case_test_path)
 
@@ -111,14 +114,14 @@ tok_2_id = defaultdict(lambda: unk_id, tok_2_id)
 
 #%% Asess dataframe shapes
 
-#print('shape case train = ', case_train_df.shape)
+print('shape case train = ', case_train_df.shape)
 print('shape case dev = ', case_dev_df.shape)
 print('shape case test = ', case_test_df.shape)
 
 #%% Convert articles to token IDs, prune and / or pad to seq len
 
 # Convert to IDs
-art_text_list = [ECHR_dict[x] for x in range(1, num_articles)]
+art_text_list = [ECHR_dict[x] for x in article_list]
 art_text_tok_list = [nltk.word_tokenize(x.lower()) for x in art_text_list]
 art_text_id_list = [[tok_2_id[token] for token in text] for text in art_text_tok_list]
 
@@ -131,18 +134,14 @@ art_text_id_list = [x + [pad_token_id] * (seq_len - len(x)) for x in art_text_id
 
 #%% Restructure train data and convert tokens to ids
 
-###
-#case_train_df = case_train_df[0:100] # Slice for debugging
-###
-
-"""str_data_train = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
+str_data_train = pd.DataFrame(columns = ['article_id', 'article_text', 'case_texts', 'outcome'])
 
 # Iterate over cases to build dataframe
 for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
     # Initialize outcomes to zero
-    outcome_list = [0] * (num_articles - 1)
+    outcome_list = [0] * len(article_list)
     # Select paragraphs from case and build list
     selected_case_passages_id_list = select_process_passage(num_passages_per_case, case_texts, seq_len,
                                                             pad_token_id, art_text_tok_list, par_selection_method)
@@ -154,29 +153,28 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
             continue
         violated_art_id = int(violated_art_id)
         # Update corresponding outcome label
-        outcome_list[violated_art_id] = 1
+        for idx, article in enumerate(article_list):
+            if violated_art_id == article:
+                outcome_list[idx] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_text_id_list,
+    aux_df = pd.DataFrame({'article_id': article_list,
+                           'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
     str_data_train = pd.concat([str_data_train, aux_df], axis = 0,
                                ignore_index = True)
-"""
+
 #%% Restructure dev data and convert tokens to ids
 
-###
-#case_dev_df = case_dev_df[0:100] # Slice for debugging
-###
-
-str_data_dev = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
+str_data_dev = pd.DataFrame(columns = ['article_id', 'article_text', 'case_texts', 'outcome'])
 
 # Iterate over cases to build dataframe
 for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
     # Initialize outcomes to zero
-    outcome_list = [0] * (num_articles - 1)
+    outcome_list = [0] * len(article_list)
     # Select paragraphs from case and build list
     selected_case_passages_id_list = select_process_passage(num_passages_per_case, case_texts, seq_len,
                                                             pad_token_id, art_text_tok_list, par_selection_method)
@@ -188,9 +186,12 @@ for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
             continue
         violated_art_id = int(violated_art_id)
         # Update corresponding outcome label
-        outcome_list[violated_art_id] = 1
+        for idx, article in enumerate(article_list):
+            if violated_art_id == article:        
+                outcome_list[idx] = 1
         
-    aux_df = pd.DataFrame({'article_text':art_text_id_list,
+    aux_df = pd.DataFrame({'article_id': article_list, 
+                           'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
@@ -199,18 +200,14 @@ for case in tqdm.tqdm(case_dev_df.iterrows(), total = len(case_dev_df)):
 
 #%% Restructure test data and convert tokens to ids
 
-###
-#case_test_df = case_test_df[0:100] # Slice for debugging
-###
-
-str_data_test = pd.DataFrame(columns = ['article_text', 'case_texts', 'outcome'])
+str_data_test = pd.DataFrame(columns = ['article_id', 'article_text', 'case_texts', 'outcome'])
 
 # Iterate over cases to build dataframe
 for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
     case_texts = case[1]['TEXT']
     violated_art_ids = case[1]['VIOLATED_ARTICLES']
     # Initialize outcomes to zero
-    outcome_list = [0] * (num_articles - 1)
+    outcome_list = [0] * len(article_list)
     # Select paragraphs from case and build list
     selected_case_passages_id_list = select_process_passage(num_passages_per_case, case_texts, seq_len,
                                                             pad_token_id, art_text_tok_list, par_selection_method)
@@ -222,9 +219,12 @@ for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
             continue
         violated_art_id = int(violated_art_id)
         # Update corresponding outcome label
-        outcome_list[violated_art_id] = 1
-        
-    aux_df = pd.DataFrame({'article_text':art_text_id_list,
+        for idx, article in enumerate(article_list):
+            if violated_art_id == article:        
+                outcome_list[idx] = 1
+
+    aux_df = pd.DataFrame({'article_id': article_list,
+                           'article_text':art_text_id_list,
                            'case_texts': selected_case_passages_id_list,
                            'outcome': outcome_list})
                            
@@ -232,22 +232,21 @@ for case in tqdm.tqdm(case_test_df.iterrows(), total = len(case_test_df)):
                                ignore_index = True)
 
 #%% Oversample train data
-"""
-x_train = pd.DataFrame(str_data_train[['article_text', 'case_texts']])
+
+x_train = pd.DataFrame(str_data_train[['article_id', 'article_text', 'case_texts']])
 y_train = pd.DataFrame(str_data_train['outcome']).astype('int')
 
 random_oversampler = RandomOverSampler(random_state = seed)
 x_train_res, y_train_res = random_oversampler.fit_resample(x_train, y_train)
 
 str_data_train = pd.concat([x_train_res, y_train_res], axis = 1)
-"""
-     
+
 #%% Save train, dev, test dataframes
 
-#print('shape train = ', str_data_train.shape)
+print('shape train = ', str_data_train.shape)
 print('shape dev = ', str_data_dev.shape)
 print('shape test = ', str_data_test.shape)
 
-#str_data_train.to_pickle(output_path_train)
+str_data_train.to_pickle(output_path_train)
 str_data_dev.to_pickle(output_path_dev)
 str_data_test.to_pickle(output_path_test)
