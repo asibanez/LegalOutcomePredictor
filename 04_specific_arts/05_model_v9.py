@@ -314,19 +314,19 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-base_folder = os.path.join(os.getcwd(),'01_data') 
-path_model_train = os.path.join(base_folder, '01_preprocessed','model_train.pkl')
-path_model_dev = os.path.join(base_folder, '01_preprocessed', 'model_dev.pkl')
-path_model_test = os.path.join(base_folder, '01_preprocessed', 'model_test.pkl')
-input_path_id_2_embed = os.path.join(base_folder, '01_preprocessed', 'id_2_embed_dict.pkl')
-output_path_model = os.path.join(base_folder, '02_results', '01_attention', 'model.pt')
-output_path_results = os.path.join(base_folder, '02_results', '01_attention', 'results.pkl')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '03_selected_arts') 
+path_model_train = os.path.join(run_folder, 'model_train.pkl')
+path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
+path_model_test = os.path.join(run_folder, 'model_test.pkl')
+output_path_model = os.path.join(run_folder, 'model.pt')
+output_path_results = os.path.join(run_folder, 'results.pkl')
+input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
 
 #%% Global initialization
 
 seed = 1234
 n_epochs = 10
-batch_size = 5
+batch_size = 700
 learning_rate = 0.001
 dropout = 0.4
 momentum = 0.9
@@ -353,9 +353,9 @@ model_test = pd.read_pickle(path_model_test)
 print('Done')
 
 ###------------------------------------------------------
-model_train = model_train[0:50]
-model_dev = model_dev[0:int(50 * 0.2)]
-model_test = model_test[0:int(50 * 0.2)]
+###model_train = model_train[0:50]
+###model_dev = model_dev[0:int(50 * 0.2)]
+###model_test = model_test[0:int(50 * 0.2)]
 ###------------------------------------------------------
 
 #%% Instantiate dataclasses
