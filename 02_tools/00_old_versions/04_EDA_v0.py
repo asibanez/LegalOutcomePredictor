@@ -46,7 +46,7 @@ num_passages_per_case = [len(x) for x in cases_passages_tok]
 num_tokens_per_passage = [len(x) for x in all_passages_tok]
 num_tokens_per_case = [len(x) for x in cases_text_tok]
 
-#%%
+#%% Compute num tokens and num passages per case
 print('max num passages in case = ', max(num_passages_per_case))
 print('avg num passages in case = ', sum(num_passages_per_case)/num_cases)
 
@@ -56,7 +56,7 @@ print('avg num tokens in passage = ', sum(num_tokens_per_passage)/num_passages)
 print('max num tokens in case = ', max(num_tokens_per_case))
 print('avg num tokens in case = ', sum(num_tokens_per_case)/num_cases)
 
-#%%
+#%% Plot num tokens and num passages per case
 fig = plt.figure()
 plt.hist(num_passages_per_case, bins = 50)
 plt.xlabel('num passages in case')
@@ -78,7 +78,17 @@ plt.xlim(0, 30000)
 plt.ylabel('freq')
 plt.show()
 
-#%% EDA ECHR
+#%% Distribution of broken articles
+
+arts_to_remove = ['P1', 'P7']
+    
+violated_art_train = [x for sublist in list(case_train_df.VIOLATED_ARTICLES) for x in sublist]
+violated_art_train = [x for x in violated_art_train if x not in arts_to_remove]
+
+
+
+
+#%% EDA ECHR law
 
 num_echr_arts = len(ECHR_dict)
 echr_art_text = list(ECHR_dict.values())
