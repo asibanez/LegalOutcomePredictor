@@ -69,7 +69,7 @@ class ECHR_model(nn.Module):
         
         # Encode article
         self.lstm_art = nn.LSTM(input_size = self.input_size,
-                                hidden_size = self.hidden_dimf,
+                                hidden_size = self.hidden_dim,
                                 num_layers = self.num_layers,
                                 bidirectional = True,
                                 batch_first = True)      
@@ -279,33 +279,33 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-"""run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '03_selected_arts') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '04_art_6_no_att') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
-input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')"""
+input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
 
-run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//04_no_art_text'
+"""run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//04_no_art_text'
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
-input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'
+input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'"""
 
 #%% Global initialization
 
 seed = 1234
 n_epochs = 10
-batch_size = 5 #700
+batch_size = 1500
 learning_rate = 0.001
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 use_cuda = True
-device = torch.device('cuda:3')
+device = torch.device('cuda:0')
 
 embed_dim = 200
 input_size = embed_dim
@@ -325,11 +325,11 @@ model_dev = pd.read_pickle(path_model_dev)
 model_test = pd.read_pickle(path_model_test)
 print('Done')
 
-###------------------------------------------------------
+"""------------------------------------------------------
 model_train = model_train[0:50]
 model_dev = model_dev[0:int(50 * 0.2)]
 model_test = model_test[0:int(50 * 0.2)]
-###------------------------------------------------------
+------------------------------------------------------"""
 
 #%% Instantiate dataclasses
 
@@ -355,8 +355,9 @@ model = ECHR_model(input_size, hidden_dim, output_size, pretrained_embeddings,
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
-    print('moving model to cuda')
+    print('Moving model to cuda')
     model = model.to(device)
+    print('Done')
 
 print(model)
 
