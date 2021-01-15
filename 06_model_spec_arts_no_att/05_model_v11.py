@@ -69,7 +69,7 @@ class ECHR_model(nn.Module):
         
         # Encode article
         self.lstm_art = nn.LSTM(input_size = self.input_size,
-                                hidden_size = self.hidden_dim,
+                                hidden_size = self.hidden_dimf,
                                 num_layers = self.num_layers,
                                 bidirectional = True,
                                 batch_first = True)      
