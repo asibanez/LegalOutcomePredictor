@@ -263,33 +263,33 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-"""run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '03_selected_arts') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '06_art_3_no_text') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
-input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')"""
+input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
 
-run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//04_no_art_text'
+"""run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//04_no_art_text'
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
-input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'
+input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'"""
 
 #%% Global initialization
 
 seed = 1234
-n_epochs = 10
-batch_size = 5 #700
+n_epochs = 20
+batch_size = 1500
 learning_rate = 0.001
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 use_cuda = True
-device = torch.device('cuda:3')
+device = torch.device('cuda:0')
 
 embed_dim = 200
 input_size = embed_dim
@@ -310,9 +310,9 @@ model_test = pd.read_pickle(path_model_test)
 print('Done')
 
 ###------------------------------------------------------
-model_train = model_train[0:50]
+"""model_train = model_train[0:50]
 model_dev = model_dev[0:int(50 * 0.2)]
-model_test = model_test[0:int(50 * 0.2)]
+model_test = model_test[0:int(50 * 0.2)]"""
 ###------------------------------------------------------
 
 #%% Instantiate dataclasses
