@@ -279,7 +279,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '04_art_6_no_att') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '07_art_3_no_att') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
@@ -287,7 +287,7 @@ output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
 input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
 
-"""run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//04_no_art_text'
+"""run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//07_art_3_no_att'
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
@@ -298,7 +298,7 @@ input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Ou
 #%% Global initialization
 
 seed = 1234
-n_epochs = 10
+n_epochs = 20
 batch_size = 1500
 learning_rate = 0.001
 dropout = 0.4
