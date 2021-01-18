@@ -124,7 +124,7 @@ def dataset_preproc_f(dataset_df, article_list, num_passages_per_case, seq_len,
 
 base_folder = os.path.split(os.getcwd())[0]
 input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_folder =  os.path.join(base_folder, '01_data', '02_runs', '12_art_6_300_pass')
+output_folder =  os.path.join(base_folder, '01_data', '02_runs', '13_art_6_50_pass')
 output_path_train = os.path.join(output_folder, 'model_train.pkl')
 output_path_dev = os.path.join(output_folder, 'model_dev.pkl')
 output_path_test = os.path.join(output_folder, 'model_test.pkl')
@@ -138,7 +138,7 @@ tok_2_id_path = os.path.join(input_folder, 'tok_2_id_dict.pkl')
 #%% Variable initialization
 
 num_articles = 66 # total number of articles in ECHR law
-num_passages_per_case = 300 # Number of case paragraphs to be fed to the model
+num_passages_per_case = 50 # Number of case paragraphs to be fed to the model
 par_selection_method = 'none' # Either 'bm25', 'random' or 'none'
 article_list = [3] #[4, 5, 6, 7]
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6'] # Art headers to be skipped
