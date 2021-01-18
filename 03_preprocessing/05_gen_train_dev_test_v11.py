@@ -119,9 +119,10 @@ def dataset_preproc_f(dataset_df, article_list, num_passages_per_case, seq_len,
 
 base_folder = os.path.split(os.getcwd())[0]
 input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_path_train = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_train.pkl')
-output_path_dev = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_dev.pkl')
-output_path_test = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_test.pkl')
+output_folder =  os.path.join(base_folder, '01_data', '02_runs', '12_art_6_300_pass')
+output_path_train = os.path.join(output_folder, 'model_train.pkl')
+output_path_dev = os.path.join(output_folder, 'model_dev.pkl')
+output_path_test = os.path.join(output_folder, 'model_test.pkl')
 
 ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
 case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
