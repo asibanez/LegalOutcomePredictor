@@ -4,7 +4,7 @@ import pickle
 
 #%% Path definition
 
-path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/02_runs/05_art_6_att/model_train.pkl'
+path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/02_runs/12_art_6_300_pass/model_train.pkl'
 path_tok_2_id = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/01_preprocessed/tok_2_id_dict.pkl'
 
 #%% Data loading
@@ -18,12 +18,12 @@ with open(path_tok_2_id, 'rb') as fr:
 #%% Global initialization
 
 pos = 0
-n_case_texts = 5
+n_case_texts = 300
 len_case_texts = 512
 id_2_tok = {}
 case_strings_all = {}
 
-#%% tok_2_id construction
+#%% tok_2_id generation
 
 for key in tok_2_id.keys():
     id_2_tok[tok_2_id[key]] = key
@@ -41,9 +41,10 @@ case_tok_all = [id_2_tok[x] for x in case_ids_all]
 
 for idx in range(0, n_case_texts):
     case_tok = case_tok_all[idx*len_case_texts : (idx+1)*len_case_texts]
-    case_strings_all[idx] = (' ').join([x for x in case_tok if x != '<PAD>'])
+    #case_strings_all[idx] = (' ').join([x for x in case_tok if x != '<PAD>'])
+    case_strings_all[idx] = (' ').join([x for x in case_tok])
 
 #%% Print results
 
 print(f'ARTICLE TEXT:\n{article_string}\n')
-#_ = [print(f'CASE_TEXT {x}\n{case_strings_all[x]}\n') for x in range(0,n_case_texts)]
+_ = [print(f'CASE_TEXT {x}\n{case_strings_all[x]}\n') for x in range(0,n_case_texts)]
