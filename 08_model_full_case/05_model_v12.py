@@ -13,6 +13,7 @@
 # v9 ->  Adds flexible attention and hidden dims to global initialization
 # v10 -> Article text removed from model
 # v11 -> Article text added to model
+# v12 -> Encodes case passages in for loop
 
 #%% Imports
 
@@ -84,14 +85,14 @@ class ECHR_model(nn.Module):
                                       batch_first = True)
         
         # Encode case document
-        self.lstm_case_doc = nn.LSTM(input_size = self.hidden_dim,
+        self.lstm_case_doc = nn.LSTM(input_size = self.hidden_dim * 2,
                                      hidden_size = self.hidden_dim,
                                      num_layers = self.num_layers,
                                      bidirectional = True,
                                      batch_first = True)
                 
         # Fully connected
-        self.fc_1 = nn.Linear(in_features = (self.num_passages + 1) * 2 * self.hidden_dim,
+        self.fc_1 = nn.Linear(in_features = self.hidden_dim * 2 * 2,
                               out_features = self.output_size)
         
         # Sigmoid
@@ -99,44 +100,41 @@ class ECHR_model(nn.Module):
         
     def forward(self, X_art, X_case):
         # Embedding
-        x_art = self.embed(X_art)                                      # ???????
-        x_case = self.embed(X_case)                                    # batch_size x (seq_len x 5) x embed_dim
+        x_art = self.embed(X_art)                                      # batch_size x seq_len x embed_dim
+        x_case = self.embed(X_case)                                    # batch_size x (seq_len x n_passages) x embed_dim
         
         # Article encoding
-        x_art = self.lstm_art(x_art)
-        x_art_fwd = x_art[0][:, -1, 0:64]
-        x_art_bkwd = x_art[0][:, 0, 64:128]
-        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)
-        x_art = self.drops(x_art)
+        x_art = self.lstm_art(x_art)                                   # Tuple (len = 2)
+        x_art_fwd = x_art[0][:, -1, 0:64]                              # batch_size x hidden_dim
+        x_art_bkwd = x_art[0][:, 0, 64:128]                            # batch_size x hidden_dim
+        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)            # batch_size x (hidden_dim x 2)
+        x_art = self.drops(x_art)                                      # batch_size x (hidden_dim x 2) 
         
         # Case sentence encoding
-        x_case_sent = {}
+        #x_case_sent = torch.FloatTensor()
+        x_case_sent = torch.cuda.FloatTensor()
         
         for idx in range(0, self.num_passages):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             x_aux = self.lstm_case_sent(x_case[:, span_b:span_e, :])  # Tuple (len = 2)
-            x_aux_fwd = x_aux[0][:, -1, 0:64]                         # batch_size x 1 x hidden_dim
-            x_aux_bkwd = x_aux[0][:, 0, 64:128]                       # batch_size x 1 x hidden_dim
-            x_aux = torch.cat((x_aux_fwd, x_aux_bkwd), dim = 1)       # batch_size x 1 x (hidden_dim x 2)
-            x_aux = self.drops(x_aux)                                 # batch_size x 1 x (hidden_dim x 2)
-            x_case_sent[idx] = x_aux                                  # Dictionary
-            
-        # Convert to list of tensors
-        x_case_sent = [x for x in x_case_sent.values()]
-        x_case_sent = torch.tensor(x_case_sent)
-        
+            x_aux_fwd = x_aux[0][:, -1, 0:64]                         # batch_size x hidden_dim
+            x_aux_bkwd = x_aux[0][:, 0, 64:128]                       # batch_size x hidden_dim
+            x_aux = torch.cat((x_aux_fwd, x_aux_bkwd), dim = 1)       # batch_size x (hidden_dim x 2)
+            x_aux = self.drops(x_aux)                                 # batch_size x (hidden_dim x 2)
+            x_aux = x_aux.unsqueeze(1)                                # batch_size x 1 x (hidden_dim x 2)
+            x_case_sent = torch.cat((x_case_sent, x_aux), dim=1)      # batch_size x n_passages x (hidden_dim x 2)
+               
         # Case document encoding
         x_case_doc = self.lstm_case_doc(x_case_sent)                  # Tuple (len = 2)
-        x_case_doc_fwd = x_case_doc[0][:, -1, 0:64]                   # batch_size x 1 x hidden_dim
-        x_case_doc_bkwd = x_case_doc[0][:, 0, 64:128]                 # batch_size x 1 x hidden_dim
+        x_case_doc_fwd = x_case_doc[0][:, -1, 0:64]                   # batch_size x hidden_dim
+        x_case_doc_bkwd = x_case_doc[0][:, 0, 64:128]                 # batch_size x hidden_dim
         x_case_doc = torch.cat((x_case_doc_fwd, x_case_doc_bkwd),
-                               dim = 1)                               # batch_size x 1 x (hidden_dim x 2)
-        x_case_doc = self.drops(x_case_doc)                           # batch_size x 1 x (hidden_dim x 2)
+                               dim = 1)                               # batch_size x (hidden_dim x 2)
+        x_case_doc = self.drops(x_case_doc)                           # batch_size x (hidden_dim x 2)
         
         # Concatenate  article and passage encodings
-
-        x = torch.cat((x_art, x_case_doc), dim = 1)                            # batch size x (6 x hidden_dim x 2)
+        x = torch.cat((x_art, x_case_doc), dim = 1)                   # batch size x (hidden_dim x 2 x 2)
         
         # Fully connected layer
         x = self.fc_1(x)                                              # batch size x output_size
@@ -249,15 +247,15 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-"""run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '07_art_3_no_att') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '13_art_6_50_pass') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
 input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
-"""
 
+"""
 run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//07_art_3_no_att'
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
@@ -265,12 +263,13 @@ path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
 input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'
+"""
 
 #%% Global initialization
 
 seed = 1234
 n_epochs = 20
-batch_size = 1500
+batch_size = 500
 learning_rate = 0.001
 dropout = 0.4
 momentum = 0.9
@@ -296,11 +295,13 @@ model_dev = pd.read_pickle(path_model_dev)
 model_test = pd.read_pickle(path_model_test)
 print('Done')
 
-#------------------------------------------------------
+"""
+#-------------------------------- FOR DEBUGGING -------
 model_train = model_train[0:50]
 model_dev = model_dev[0:int(50 * 0.2)]
 model_test = model_test[0:int(50 * 0.2)]
 #------------------------------------------------------
+"""
 
 #%% Instantiate dataclasses
 
@@ -334,10 +335,10 @@ print(model)
 
 #%% Instantiate optimizer & criterion
 
-#optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate,
-#                             weight_decay = wd, momentum = momentum)
-optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate,
-                            momentum = momentum)
+optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate,
+                             weight_decay = wd)
+#optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate,
+#                            momentum = momentum)
 criterion = nn.BCELoss()
 
 #%% Training
@@ -370,25 +371,7 @@ print(f'Recall: {recall:.3f}')
 print(f'F1: {f1:.3f}\n')
 print(f'AUC: {auc:.3f}\n')
 
-#%% Plot ROC curve
-fpr, tpr, threshold_roc = roc_curve(Y_ground_truth, Y_predicted_score)
-plt.plot(fpr, tpr, linestyle='--', label='Model')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.legend(loc = 'lower right')
-plt.grid()
-plt.show()    
-
-#%% Plot Precision - recall curve
-precision_model, recall_model, threshold = precision_recall_curve(Y_ground_truth, Y_predicted_score)
-plt.plot(recall_model, precision_model, linestyle='--', label='Model')
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.legend(loc = 'lower left')
-plt.grid()
-plt.show()
-
-#%% Save results
+#%% Save model and results
 
 torch.save(model, output_path_model)
 results = {'training_loss': train_loss_history,
@@ -397,5 +380,4 @@ results = {'training_loss': train_loss_history,
            'Y_test_prediction_scores': Y_predicted_score,
            'Y_test_prediction_binary': Y_predicted_binary}
 with open(output_path_results, 'wb') as fw:
-    pickle.dump(results, fw)
-    
+    pickle.dump(results, fw) 
