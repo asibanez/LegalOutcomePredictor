@@ -74,8 +74,8 @@ def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token
 
 #%% Data restructuring and conversion to IDs
 
-dataset_preproc_func(dataset_df, article_list, num_passages_per_case, seq_len,
-                     pad_token_id, art_text_tok_list, par_selection_method):
+def dataset_preproc_f(dataset_df, article_list, num_passages_per_case, seq_len,
+                         pad_token_id, art_text_tok_list, par_selection_method):
 
     str_data = pd.DataFrame(columns = ['article_id', 'article_text', 'case_texts', 'outcome'])
     
@@ -207,6 +207,10 @@ for case in tqdm.tqdm(case_train_df.iterrows(), total = len(case_train_df)):
                            
     str_data_train = pd.concat([str_data_train, aux_df], axis = 0,
                                ignore_index = True)
+
+#%%
+
+test_df = dataset_preproc_f(case_train_df, article_list, num_passages_per_case, seq_len, pad_token_id, art_text_tok_list, par_selection_method)
 
 #%% Restructure dev data and convert tokens to ids
 
