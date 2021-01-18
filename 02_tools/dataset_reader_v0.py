@@ -17,7 +17,7 @@ with open(path_tok_2_id, 'rb') as fr:
 
 #%% Global initialization
 
-pos = 0
+pos = 1
 n_case_texts = 300
 len_case_texts = 512
 id_2_tok = {}
@@ -30,6 +30,7 @@ for key in tok_2_id.keys():
     
 #%% Article extraction
 
+case_id = data.iloc[pos]['case_id']
 article_id = data.iloc[pos]['article_text']
 article_tok = [id_2_tok[x] for x in article_id]
 article_string = (' ').join([x for x in article_tok if x != '<PAD>'])
@@ -46,5 +47,6 @@ for idx in range(0, n_case_texts):
 
 #%% Print results
 
+print(f'CASE ID:\n{case_id}\n')
 print(f'ARTICLE TEXT:\n{article_string}\n')
 _ = [print(f'CASE_TEXT {x}\n{case_strings_all[x]}\n') for x in range(0,n_case_texts)]
