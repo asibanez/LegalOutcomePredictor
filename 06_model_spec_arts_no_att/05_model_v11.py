@@ -1,16 +1,18 @@
-# v1 -> Pickle dataframes read with pandas - "Load data" section
-# v2 -> Splits LSTM into 2 (LSTM and case)
-# v3 -> Uses FastText embeddings
-# v4 -> Conversion to token IDs, prunning and padding moved to preprocessing
-# v5 -> Splits cases in 5 different LSTMs
-# v6 -> Sigmoid function introduced.
-#       Loss function changed from nn.BCEWithLogitsLoss() to nn.BCE()
-#       Dropout added to LSTMS
-# v7 -> Test function added
-#       Metric computations added
-#       Saves model and results history
-# v8 -> Adds attention layers
-# v9 -> Adds flexible attention and hidden dims to global initialization
+# v1 ->  Pickle dataframes read with pandas - "Load data" section
+# v2 ->  Splits LSTM into 2 (LSTM and case)
+# v3 ->  Uses FastText embeddings
+# v4 ->  Conversion to token IDs, prunning and padding moved to preprocessing
+# v5 ->  Splits cases in 5 different LSTMs
+# v6 ->  Sigmoid function introduced.
+#        Loss function changed from nn.BCEWithLogitsLoss() to nn.BCE()
+#        Dropout added to LSTMS
+# v7 ->  Test function added
+#        Metric computations added
+#        Saves model and results history
+# v8 ->  Adds attention layers
+# v9 ->  Adds flexible attention and hidden dims to global initialization
+# v10 -> Article text removed from model
+# v11 -> Article text added to model
 
 #%% Imports
 
@@ -58,7 +60,6 @@ class ECHR_model(nn.Module):
         self.output_size = output_size
         self.dropout = dropout
         self.num_layers = 1
-        self.att_dim = att_dim
 
         # Embedding
         self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
@@ -104,23 +105,6 @@ class ECHR_model(nn.Module):
                                  bidirectional = True,
                                  batch_first = True)      
         
-        self.fc_query = nn.Linear(in_features = self.hidden_dim * 2,
-                                  out_features = self.att_dim)
-        
-        self.fc_context_1 = nn.Linear(in_features = self.hidden_dim * 2,
-                                      out_features = self.att_dim)
-        
-        self.fc_context_2 = nn.Linear(in_features = self.hidden_dim * 2,
-                                      out_features = self.att_dim)
-        
-        self.fc_context_3 = nn.Linear(in_features = self.hidden_dim * 2,
-                                      out_features = self.att_dim)
-        
-        self.fc_context_4 = nn.Linear(in_features = self.hidden_dim * 2,
-                                      out_features = self.att_dim)
-        
-        self.fc_context_5 = nn.Linear(in_features = self.hidden_dim * 2,
-                                      out_features = self.att_dim)
         
         self.fc_1 = nn.Linear(in_features = 6 * 2 * self.hidden_dim,
                               out_features = self.output_size)
@@ -129,85 +113,66 @@ class ECHR_model(nn.Module):
         
     def forward(self, X_art, X_case):
         # Embedding
-        x_art = self.embed(X_art)                             # batch_size x seq_len x embed_dim
+        x_art = self.embed(X_art)                             # ???????
         x_case = self.embed(X_case)                           # batch_size x (seq_len x 5) x embed_dim
         
-        # Encoding article
-        x_art = self.lstm_art(x_art)                          # tuple len = 2
-        x_art_fwd = x_art[0][:, -1, 0:hidden_dim]             # batch_size x hidden_dim
-        x_art_bkwd = x_art[0][:, 0, hidden_dim:2*hidden_dim]  # batch_size x hidden_dim
-        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)   # batch_size x (hidden_dim x 2)
-        x_art = self.drops(x_art)                             # batch_size x (hidden_dim x 2)
+        # LSTM article
+        x_art = self.lstm_art(x_art)
+        x_art_fwd = x_art[0][:, -1, 0:64]
+        x_art_bkwd = x_art[0][:, 0, 64:128]
+        x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)
+        x_art = self.drops(x_art)
         
-        # Query vector
-        query_v = self.fc_query(x_art).unsqueeze(2)           # batch_size x att_dim x 1
+        # LSTM Case 1
+        x_case_1 = self.lstm_case_1(x_case[:, 0:512, :])      # Tuple (len = 2)
+        x_case_1_fwd = x_case_1[0][:, -1, 0:64]               # batch_size x 1 x hidden_dim
+        x_case_1_bkwd = x_case_1[0][:, 0, 64:128]             # batch_size x 1 x hidden_dim
+        x_case_1 = torch.cat((x_case_1_fwd, x_case_1_bkwd),
+                             dim = 1)                         # batch_size x 1 x (hidden_dim x 2)
+        x_case_1 = self.drops(x_case_1)                       # batch_size x 1 x (hidden_dim x 2)
+        
+        # LSTM Case 2
+        x_case_2 = self.lstm_case_1(x_case[:, 512:1024, :])   # Tuple (len = 2)
+        x_case_2_fwd = x_case_2[0][:, -1, 0:64]               # batch_size x 1 x hidden_dim
+        x_case_2_bkwd = x_case_2[0][:, 0, 64:128]             # batch_size x 1 x hidden_dim  
+        x_case_2 = torch.cat((x_case_2_fwd, x_case_2_bkwd),
+                             dim = 1)                         # batch_size x 1 x (hidden_dim x 2)
+        x_case_2 = self.drops(x_case_2)                       # batch_size x 1 x (hidden_dim x 2)  
+        
+        # LSTM Case 3
+        x_case_3 = self.lstm_case_1(x_case[:, 1024:1536, :])  # Tuple (len = 2)
+        x_case_3_fwd = x_case_3[0][:, -1, 0:64]               # batch_size x 1 x hidden_dim
+        x_case_3_bkwd = x_case_3[0][:, 0, 64:128]             # batch_size x 1 x hidden_dim
+        x_case_3 = torch.cat((x_case_3_fwd, x_case_3_bkwd),
+                             dim = 1)                         # batch_size x 1 x (hidden_dim x 2)
+        x_case_3 = self.drops(x_case_3)                       # batch_size x 1 x (hidden_dim x 2)
+        
+        # LSTM Case 4
+        x_case_4 = self.lstm_case_1(x_case[:, 1536:2048, :])  # Tuple (len = 2)
+        x_case_4_fwd = x_case_4[0][:, -1, 0:64]               # batch_size x 1 x hidden_dim
+        x_case_4_bkwd = x_case_4[0][:, 0, 64:128]             # batch_size x 1 x hidden_dim
+        x_case_4 = torch.cat((x_case_4_fwd, x_case_4_bkwd),
+                             dim = 1)                         # batch_size x 1 x (hidden_dim x 2)
+        x_case_4 = self.drops(x_case_4)                       # batch_size x 1 x (hidden_dim x 2)
+        
+        # LSTM Case 5
+        x_case_5 = self.lstm_case_1(x_case[:, 2048:2560, :])  # Tuple (len = 2)
+        x_case_5_fwd = x_case_5[0][:, -1, 0:64]               # batch_size x 1 x hidden_dim
+        x_case_5_bkwd = x_case_5[0][:, 0, 64:128]             # batch_size x 1 x hidden_dim
+        x_case_5 = torch.cat((x_case_5_fwd, x_case_5_bkwd),
+                             dim = 1)                         # batch_size x 1 x (hidden_dim x 2)
+        x_case_5 = self.drops(x_case_5)                       # batch_size x 1 x (hidden_dim x 2)
+        
                 
-        # Case 1
-        # Encoding
-        x_case_1 = self.lstm_case_1(x_case[:,0:512,:])[0]     # batch_size x seq_len x (hidden_dim x 2)
-        x_case_1 = self.drops(x_case_1)                       # batch_size x seq_len x (hidden_dim x 2)
-        # Attention
-        proj_c_1 = torch.tanh(self.fc_context_1(x_case_1))    # batch_size x seq_len x att_dim
-        alpha_c_1 = torch.bmm(proj_c_1, query_v)              # batch _size x seq_len x 1
-        alpha_c_1 = torch.softmax(alpha_c_1, dim = 1)         # batch_size x seq_len x 1
-        att_output_c_1 = x_case_1 * alpha_c_1                 # batch_size x seq_len x (hidden_dim x 2)
-        att_output_c_1 = torch.sum(att_output_c_1,axis = 1)   # batch_size x (hidden_dim x 2)
-        
-        
-        # Case 2
-        # Encoding
-        x_case_2 = self.lstm_case_2(x_case[:,512:1024,:])[0]  # batch_size x seq_len x (hidden_dim x 2)
-        x_case_2 = self.drops(x_case_2)                       # batch_size x seq_len x (hidden_dim x 2)
-        # Attention
-        proj_c_2 = torch.tanh(self.fc_context_2(x_case_2))    # batch_size x seq_len x att_dim
-        alpha_c_2 = torch.bmm(proj_c_2, query_v)              # batch _size x seq_len x 1
-        alpha_c_2 = torch.softmax(alpha_c_2, dim = 1)         # batch_size x seq_len x 1
-        att_output_c_2 = x_case_2 * alpha_c_2                 # batch_size x seq_len x (hidden_dim x 2)
-        att_output_c_2 = torch.sum(att_output_c_2,axis = 1)   # batch_size x (hidden_dim x 2)
-                
-        # Case 3
-        # Encoding
-        x_case_3 = self.lstm_case_3(x_case[:,1024:1536,:])[0] # batch_size x seq_len x (hidden_dim x 2)
-        x_case_3 = self.drops(x_case_3)                       # batch_size x seq_len x (hidden_dim x 2)
-        # Attention
-        proj_c_3 = torch.tanh(self.fc_context_3(x_case_3))    # batch_size x seq_len x att_dim
-        alpha_c_3 = torch.bmm(proj_c_3, query_v)              # batch _size x seq_len x 1
-        alpha_c_3 = torch.softmax(alpha_c_3, dim = 1)         # batch_size x seq_len x 1
-        att_output_c_3 = x_case_3 * alpha_c_3                 # batch_size x seq_len x (hidden_dim x 2)
-        att_output_c_3 = torch.sum(att_output_c_3,axis = 1)   # batch_size x (hidden_dim x 2)
-
-        # Case 4
-        # Encoding
-        x_case_4 = self.lstm_case_4(x_case[:,1536:2048,:])[0] # batch_size x seq_len x (hidden_dim x 2)
-        x_case_4 = self.drops(x_case_4)                       # batch_size x seq_len x (hidden_dim x 2)
-        # Attention
-        proj_c_4 = torch.tanh(self.fc_context_4(x_case_4))    # batch_size x seq_len x att_dim
-        alpha_c_4 = torch.bmm(proj_c_4, query_v)              # batch _size x seq_len x 1
-        alpha_c_4 = torch.softmax(alpha_c_4, dim = 1)         # batch_size x seq_len x 1
-        att_output_c_4 = x_case_4 * alpha_c_4                 # batch_size x seq_len x (hidden_dim x 2)
-        att_output_c_4 = torch.sum(att_output_c_4,axis = 1)   # batch_size x (hidden_dim x 2)
-    
-        # Case 5
-        # Encoding
-        x_case_5 = self.lstm_case_5(x_case[:,2048:2560,:])[0] # batch_size x seq_len x (hidden_dim x 2)
-        x_case_5 = self.drops(x_case_5)                       # batch_size x seq_len x (hidden_dim x 2)
-        # Attention
-        proj_c_5 = torch.tanh(self.fc_context_5(x_case_5))    # batch_size x seq_len x att_dim
-        alpha_c_5 = torch.bmm(proj_c_5, query_v)              # batch _size x seq_len x 1
-        alpha_c_5 = torch.softmax(alpha_c_5, dim = 1)         # batch_size x seq_len x 1
-        att_output_c_5 = x_case_5 * alpha_c_5                 # batch_size x seq_len x (hidden_dim x 2)
-        att_output_c_5 = torch.sum(att_output_c_5,axis = 1)   # batch_size x (hidden_dim x 2)
-        
-        # Concatenate article & passage encodings
-        x = torch.cat((x_art, att_output_c_1, att_output_c_2,
-                       att_output_c_3, att_output_c_4,
-                       att_output_c_5), dim = 1)              # batch size x (6 x hidden_dim x 2)
+        # Concatenate passage encodings
+        x = torch.cat((x_art, x_case_1, x_case_2, x_case_3,
+                       x_case_4, x_case_5), dim = 1)          # batch size x (6 x hidden_dim x 2)
         
         # Fully connected layer
-        x = self.fc_1(x)
+        x = self.fc_1(x)                                      # batch size x output_size
         
         # Sigmoid function
-        x = self.sigmoid(x)
+        x = self.sigmoid(x)                                   # batch size x output_size
         
         return x
 
@@ -314,13 +279,21 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '07_art_3_no_att') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '10_art_13_no_att') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
 input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
+
+"""run_folder = 'C://Users//siban//Dropbox/CSAIL//Projects//12_Legal_Outcome_Predictor//01_data//02_runs//07_art_3_no_att'
+path_model_train = os.path.join(run_folder, 'model_train.pkl')
+path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
+path_model_test = os.path.join(run_folder, 'model_test.pkl')
+output_path_model = os.path.join(run_folder, 'model.pt')
+output_path_results = os.path.join(run_folder, 'results.pkl')
+input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'"""
 
 #%% Global initialization
 
@@ -352,11 +325,11 @@ model_dev = pd.read_pickle(path_model_dev)
 model_test = pd.read_pickle(path_model_test)
 print('Done')
 
-###------------------------------------------------------
-"""model_train = model_train[0:50]
+"""------------------------------------------------------
+model_train = model_train[0:50]
 model_dev = model_dev[0:int(50 * 0.2)]
-model_test = model_test[0:int(50 * 0.2)]"""
-###------------------------------------------------------
+model_test = model_test[0:int(50 * 0.2)]
+------------------------------------------------------"""
 
 #%% Instantiate dataclasses
 
@@ -382,8 +355,9 @@ model = ECHR_model(input_size, hidden_dim, output_size, pretrained_embeddings,
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
-    print('moving model to cuda')
+    print('Moving model to cuda')
     model = model.to(device)
+    print('Done')
 
 print(model)
 

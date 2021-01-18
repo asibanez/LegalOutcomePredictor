@@ -263,7 +263,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '06_art_3_no_text') 
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '09_art_13_no_text') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')

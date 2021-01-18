@@ -73,9 +73,9 @@ def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token
 
 base_folder = os.path.split(os.getcwd())[0]
 input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_path_train = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_train.pkl')
-output_path_dev = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_dev.pkl')
-output_path_test = os.path.join(base_folder, '01_data', '02_runs', '06_art_5_no_text', 'model_test.pkl')
+output_path_train = os.path.join(base_folder, '01_data', '02_runs', '09_art_13_no_text', 'model_train.pkl')
+output_path_dev = os.path.join(base_folder, '01_data', '02_runs', '09_art_13_no_text', 'model_dev.pkl')
+output_path_test = os.path.join(base_folder, '01_data', '02_runs', '09_art_13_no_text', 'model_test.pkl')
 
 ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
 case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
@@ -89,7 +89,7 @@ par_selection_method = 'bm25' # Either 'bm25' or 'random'
 num_passages_per_case = 5 # Number of case paragraphs to be fed to the model
 num_articles = 66 # total number of articles in ECHR law
 #article_list = [4, 5, 6, 7]
-article_list = [3]
+article_list = [13]
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6'] # Art headers to be skipped
 pad_token_id = 0
 seq_len = 512
