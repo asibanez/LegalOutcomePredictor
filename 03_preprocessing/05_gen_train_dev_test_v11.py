@@ -49,7 +49,10 @@ def select_process_passage(num_passages_per_case, case_texts, seq_len, pad_token
             tokenized_corpus = [doc.split(' ') for doc in case_texts]
             bm25 = BM25Okapi(tokenized_corpus)
             selected_passages = bm25.get_top_n(art_text_tok, case_texts, n = num_passages_per_case)    
-            
+        
+        elif par_selection_method == 'none':
+            selected_passages = case_texts[0:num_passages_per_case]            
+        
         else:
             print('Error: Incorrect paragraph selection method')
             exit()
@@ -128,11 +131,10 @@ tok_2_id_path = os.path.join(input_folder, 'tok_2_id_dict.pkl')
 
 #%% Variable initialization
 
-par_selection_method = 'bm25' # Either 'bm25' or 'random'
-num_passages_per_case = 5 # Number of case paragraphs to be fed to the model
 num_articles = 66 # total number of articles in ECHR law
-#article_list = [4, 5, 6, 7]
-article_list = [3]
+num_passages_per_case = 300 # Number of case paragraphs to be fed to the model
+par_selection_method = 'none' # Either 'bm25', 'random' or 'none'
+article_list = [3] #[4, 5, 6, 7]
 arts_to_skip = ['P1', 'P4', 'P7', 'P12', 'P6'] # Art headers to be skipped
 pad_token_id = 0
 seq_len = 512
@@ -177,11 +179,14 @@ art_text_id_list = [x + [pad_token_id] * (seq_len - len(x)) for x in art_text_id
 
 #%% Restructure train / dev / test datasets and convert tokens to ids
                            
-str_data_train = dataset_preproc_f(case_train_df, article_list, num_passages_per_case, seq_len, pad_token_id, art_text_tok_list, par_selection_method)
+str_data_train = dataset_preproc_f(case_train_df, article_list, num_passages_per_case,
+                                   seq_len, pad_token_id, art_text_tok_list, par_selection_method)
 
-str_data_dev = dataset_preproc_f(case_dev_df, article_list, num_passages_per_case, seq_len, pad_token_id, art_text_tok_list, par_selection_method)
+str_data_dev = dataset_preproc_f(case_dev_df, article_list, num_passages_per_case,
+                                 seq_len, pad_token_id, art_text_tok_list, par_selection_method)
 
-str_data_test = dataset_preproc_f(case_test_df, article_list, num_passages_per_case, seq_len, pad_token_id, art_text_tok_list, par_selection_method)
+str_data_test = dataset_preproc_f(case_test_df, article_list, num_passages_per_case,
+                                  seq_len, pad_token_id, art_text_tok_list, par_selection_method)
 
 #%% Oversample train data
 
