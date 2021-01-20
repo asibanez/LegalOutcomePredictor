@@ -11,7 +11,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from model_v13 import ECHR_dataset, ECHR_model
+from model_v14 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -137,6 +137,9 @@ input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Ou
 #%% Global initialization
 
 debug_flag = False
+art_text = True
+seq_len = 512
+num_passages = 50
 
 seed = 1234
 n_epochs = 20
@@ -160,7 +163,6 @@ pad_idx = 0
 print('Loading data')
 with open(input_path_id_2_embed, 'rb') as fr:
     id_2_embed = pickle.load(fr)
-
 model_train = pd.read_pickle(path_model_train)
 model_dev = pd.read_pickle(path_model_dev)
 model_test = pd.read_pickle(path_model_test)
@@ -193,7 +195,7 @@ print('Done')
 
 pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
 model = ECHR_model(embed_dim, hidden_dim, output_size, pretrained_embeddings,
-                   att_dim, dropout)
+                   att_dim, dropout, art_text, seq_len, num_passages)
 
 # Move to cuda
 if use_cuda and torch.cuda.is_available():
