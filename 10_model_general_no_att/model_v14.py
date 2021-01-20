@@ -17,6 +17,7 @@
 # v13 -> Train moved to independent script train.py
 # v14 -> Added option to include / exclude article text
 #        seq_len and num_passages added as variables in train.py
+#        fwd and bkwd dimesions computed based on hidden_dim variable
 
 #%% Imports
 
@@ -53,7 +54,7 @@ class ECHR_model(nn.Module):
         self.num_layers = 1
         self.dropout = dropout
         self.input_size = input_size
-        self.hidden_dim = hidden_dim
+        self.h_dim = hidden_dim
         self.output_size = output_size
         self.num_passages = num_passages #5 #300
         self.seq_len = seq_len #512
@@ -67,56 +68,63 @@ class ECHR_model(nn.Module):
         
         # Encode article
         self.lstm_art = nn.LSTM(input_size = self.input_size,
-                                hidden_size = self.hidden_dim,
+                                hidden_size = self.h_dim,
                                 num_layers = self.num_layers,
                                 bidirectional = True,
                                 batch_first = True)      
         
         # Encode case senteces
         self.lstm_case_sent = nn.LSTM(input_size = self.input_size,
-                                      hidden_size = self.hidden_dim,
+                                      hidden_size = self.h_dim,
                                       num_layers = self.num_layers,
                                       bidirectional = True,
                                       batch_first = True)
         
         # Encode case document
-        self.lstm_case_doc = nn.LSTM(input_size = self.hidden_dim * 2,
-                                     hidden_size = self.hidden_dim,
+        self.lstm_case_doc = nn.LSTM(input_size = self.h_dim * 2,
+                                     hidden_size = self.h_dim,
                                      num_layers = self.num_layers,
                                      bidirectional = True,
                                      batch_first = True)
                 
-        # Fully connected
-        self.fc_1 = nn.Linear(in_features = self.hidden_dim * 2 * 2,
+        # Fully connected with article text
+        self.fc_1 = nn.Linear(in_features = self.h_dim * 2 * 2,
                               out_features = self.output_size)
         
+
+        # Fully connected without article text
+        self.fc_2 = nn.Linear(in_features = self.h_dim * 1 * 2,
+                              out_features = self.output_size)
+
         # Sigmoid
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, X_art, X_case):
+        bilstm_b = self.h_dim
+        bilstm_e = self.h_dim * 2
+
         # Embedding
         if self.art_text == True:
             x_art = self.embed(X_art)                                  # batch_size x seq_len x embed_dim
         x_case = self.embed(X_case)                                    # batch_size x (seq_len x n_passages) x embed_dim
         
-        
         if self.art_text == True:
             # Article encoding
             x_art = self.lstm_art(x_art)                               # Tuple (len = 2)
-            x_art_fwd = x_art[0][:, -1, 0:64]                          # batch_size x hidden_dim
-            x_art_bkwd = x_art[0][:, 0, 64:128]                        # batch_size x hidden_dim
+            x_art_fwd = x_art[0][:, -1, 0:bilstm_b]                    # batch_size x hidden_dim
+            x_art_bkwd = x_art[0][:, 0, bilstm_b:bilstm_e]             # batch_size x hidden_dim
             x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)        # batch_size x (hidden_dim x 2)
             x_art = self.drops(x_art)                                  # batch_size x (hidden_dim x 2) 
         
         # Case sentence encoding
-        x_case_sent = torch.FloatTensor().to(x_art.device)
+        x_case_sent = torch.FloatTensor().to(x_case.device)
         
         for idx in range(0, self.num_passages):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             x_aux = self.lstm_case_sent(x_case[:, span_b:span_e, :])  # Tuple (len = 2)
-            x_aux_fwd = x_aux[0][:, -1, 0:64]                         # batch_size x hidden_dim
-            x_aux_bkwd = x_aux[0][:, 0, 64:128]                       # batch_size x hidden_dim
+            x_aux_fwd = x_aux[0][:, -1, 0:bilstm_b]                   # batch_size x hidden_dim
+            x_aux_bkwd = x_aux[0][:, 0, bilstm_b:bilstm_e]            # batch_size x hidden_dim
             x_aux = torch.cat((x_aux_fwd, x_aux_bkwd), dim = 1)       # batch_size x (hidden_dim x 2)
             x_aux = self.drops(x_aux)                                 # batch_size x (hidden_dim x 2)
             x_aux = x_aux.unsqueeze(1)                                # batch_size x 1 x (hidden_dim x 2)
@@ -124,8 +132,8 @@ class ECHR_model(nn.Module):
                
         # Case document encoding
         x_case_doc = self.lstm_case_doc(x_case_sent)                  # Tuple (len = 2)
-        x_case_doc_fwd = x_case_doc[0][:, -1, 0:64]                   # batch_size x hidden_dim
-        x_case_doc_bkwd = x_case_doc[0][:, 0, 64:128]                 # batch_size x hidden_dim
+        x_case_doc_fwd = x_case_doc[0][:, -1, 0:bilstm_b]             # batch_size x hidden_dim
+        x_case_doc_bkwd = x_case_doc[0][:, 0, bilstm_b:bilstm_e]      # batch_size x hidden_dim
         x_case_doc = torch.cat((x_case_doc_fwd, x_case_doc_bkwd),
                                dim = 1)                               # batch_size x (hidden_dim x 2)
         x_case_doc = self.drops(x_case_doc)                           # batch_size x (hidden_dim x 2)
@@ -133,12 +141,9 @@ class ECHR_model(nn.Module):
         if self.art_text == True:
             # Concatenate  article and passage encodings
             x = torch.cat((x_art, x_case_doc), dim = 1)               # batch size x (hidden_dim x 2 x 2)
-        
+            x = self.fc_1(x)                                          # batch size x output_size
         else:
-            x = x_case_doc
-            
-        # Fully connected layer
-        x = self.fc_1(x)                                              # batch size x output_size
+            x = self.fc_2(x_case_doc)                                 # batch size x output_size 
         
         # Sigmoid function
         x = self.sigmoid(x)                                           # batch size x output_size
