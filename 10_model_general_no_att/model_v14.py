@@ -105,9 +105,11 @@ class ECHR_model(nn.Module):
 
         # Embedding
         if self.art_text == True:
+            # Article embedding
             x_art = self.embed(X_art)                                  # batch_size x seq_len x embed_dim
         x_case = self.embed(X_case)                                    # batch_size x (seq_len x n_passages) x embed_dim
         
+        # Encoding
         if self.art_text == True:
             # Article encoding
             x_art = self.lstm_art(x_art)                               # Tuple (len = 2)

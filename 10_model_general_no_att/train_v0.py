@@ -1,10 +1,12 @@
 # v0
+# v1  -> Saves model parameters as json
 
 #%% Imports
 
 import os
-import pickle
+import json
 import torch
+import pickle
 import pandas as pd
 import torch.nn as nn
 from tqdm import tqdm
@@ -115,24 +117,25 @@ def test_func(model, test_dl):
     return Y_predicted_score, Y_predicted_binary, Y_ground_truth
 
 #%% Path definition
-
+"""
 run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '20_art3_50p_art_dim_64_20_epochs') 
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
+output_path_params = os.path.join(run_folder, 'params.json')
 input_path_id_2_embed = os.path.join(os.path.split(os.getcwd())[0], '01_data', '01_preprocessed', 'id_2_embed_dict.pkl')
 
 """
-run_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/02_runs/12_art_6_300_pass'
+run_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/01_data/02_runs/12_art_3_300_pass'
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
 output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
+output_path_params = os.path.join(run_folder, 'params.json')
 input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'
-"""
 
 #%% Global initialization
 
@@ -209,8 +212,6 @@ print(model)
 
 optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate,
                              weight_decay = wd)
-#optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate,
-#                            momentum = momentum)
 criterion = nn.BCELoss()
 
 #%% Training
@@ -243,9 +244,12 @@ print(f'Recall: {recall:.3f}')
 print(f'F1: {f1:.3f}\n')
 print(f'AUC: {auc:.3f}\n')
 
-#%% Save model and results
+#%% Save model 
 
 torch.save(model, output_path_model)
+
+#%% Save results
+
 results = {'training_loss': train_loss_history,
            'validation_loss': val_loss_history,
            'Y_test_ground_truth': Y_ground_truth,
@@ -253,3 +257,29 @@ results = {'training_loss': train_loss_history,
            'Y_test_prediction_binary': Y_predicted_binary}
 with open(output_path_results, 'wb') as fw:
     pickle.dump(results, fw) 
+
+#%% Save model parameters
+
+model_params = {'debug_flag': debug_flag,
+                'art_text': art_text,
+                'seq_len': seq_len,
+                'num_passages': num_passages,              
+                'seed': seed,
+                'n_epochs': n_epochs,
+                'batch_size': batch_size,
+                'learning_rate': learning_rate,
+                'dropout': dropout,
+                'momentum': momentum,
+                'wd': wd,
+                'use_cuda': use_cuda,
+                'device': device,
+                'embed_dim': embed_dim,
+                'hidden_dim': hidden_dim,
+                'att_dim': att_dim,
+                'output_size': output_size,
+                'pad_idx': pad_idx}
+
+with open(output_path_params, 'w') as fw:
+    json.dump(model_params, fw)
+
+#%%
