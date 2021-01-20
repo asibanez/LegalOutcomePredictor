@@ -117,8 +117,8 @@ def test_func(model, test_dl):
     return Y_predicted_score, Y_predicted_binary, Y_ground_truth
 
 #%% Path definition
-"""
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '20_art3_50p_art_dim_64_20_epochs') 
+
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '23_art5_50p_no_art_dim_100_10_ep')
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
@@ -136,16 +136,17 @@ output_path_model = os.path.join(run_folder, 'model.pt')
 output_path_results = os.path.join(run_folder, 'results.pkl')
 output_path_params = os.path.join(run_folder, 'params.json')
 input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//01_data/01_preprocessed//id_2_embed_dict.pkl'
+"""
 
 #%% Global initialization
 
 debug_flag = False
-art_text = True
+art_text = False
 seq_len = 512
 num_passages = 50
 
 seed = 1234
-n_epochs = 20
+n_epochs = 10
 batch_size = 200
 learning_rate = 0.001
 dropout = 0.4
@@ -153,10 +154,10 @@ momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-device = 'cuda:0'
+device = 'cuda:4'
 
 embed_dim = 200
-hidden_dim = 64
+hidden_dim = 100
 att_dim = 100
 output_size = 1
 pad_idx = 0
