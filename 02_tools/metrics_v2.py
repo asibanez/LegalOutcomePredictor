@@ -25,7 +25,12 @@ def compute_metrics(Y_ground_truth, Y_predicted_binary, Y_predicted_score):
 #%% Path definitions
 
 base_path = os.getcwd()
-input_path = os.path.join(base_path, '01_data', '02_runs','20_art3_50p_art_dim_100_10_epochs', 'results.pkl')
+input_path = os.path.join(base_path, '01_data', '02_runs','27_art8_50p_no_art_dim_100_10_ep', 'results.pkl')
+
+#%% Global initialization
+
+random.seed(1234)
+threshold = 0.5
 
 #%% Read data
 
@@ -54,8 +59,6 @@ for i in range(0, len(Y_predicted_score)):
 random_pred_binary = [1 if x >= 0.5 else 0 for x in random_pred_score]
 
 #%% Compute metrics
-
-threshold = 0.5
 
 # Model
 Y_predicted_binary = [1 if x >= threshold else 0 for x in Y_predicted_score]
@@ -132,6 +135,7 @@ print(f'% positive = {share_positive*100:.2f}\n')
 print(f'Precision model: {precision_model:.3f}')
 print(f'Recall model: {recall_model:.3f}')
 print(f'F1 model: {f1_model:.3f}')
+print(f'Max F1 model: {max(f1_list):.3f}')
 print(f'AUC model: {auc_model:.3f}\n')
 
 print(f'Precision rand: {precision_rand:.3f}')
