@@ -57,6 +57,7 @@ class ECHR_model(nn.Module):
         self.input_size = input_size
         self.h_dim = hidden_dim
         self.output_size = output_size
+        self.att_dim = att_dim
         self.num_passages = num_passages #5 #300
         self.seq_len = seq_len #512
         self.art_text = art_text
@@ -97,6 +98,10 @@ class ECHR_model(nn.Module):
         self.fc_query = nn.Linear(in_features = self.h_dim * 2,
                                   out_features = self.att_dim)
 
+        # Fully connected context
+        self.fc_context = nn.Linear(in_features = self.h_dim * 2,
+                                    out_features = self.att_dim)
+
         # Sigmoid
         self.sigmoid = nn.Sigmoid()
         
@@ -127,7 +132,7 @@ class ECHR_model(nn.Module):
             x_aux = self.lstm_case_sent(x_case[:,span_b:span_e,:])[0] # batch_size x seq_len x (hidden_dim x 2)
             x_aux = self.drops(x_aux)                                 # batch_size x seq_len x (hidden_dim x 2)
             # Attention
-            projection = torch.tanh(self.fc_context_1(x_aux))         # batch_size x seq_len x att_dim
+            projection = torch.tanh(self.fc_context(x_aux))           # batch_size x seq_len x att_dim
             alpha = torch.bmm(projection, query_v)                    # batch _size x seq_len x 1
             alpha = torch.softmax(alpha, dim = 1)                     # batch_size x seq_len x 1
             att_output = x_aux * alpha                                # batch_size x seq_len x (hidden_dim x 2)
