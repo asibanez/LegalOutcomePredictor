@@ -13,7 +13,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from model_v14 import ECHR_dataset, ECHR_model
+from model_v15 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -118,7 +118,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '23_art5_50p_no_art_dim_100_10_ep')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '28_art8_50p_coatt_dim_100_10_ep')
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
@@ -147,14 +147,14 @@ num_passages = 50
 
 seed = 1234
 n_epochs = 10
-batch_size = 200
+batch_size = 150
 learning_rate = 0.001
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-device = 'cuda:4'
+device = 'cuda:0'
 
 embed_dim = 200
 hidden_dim = 100
