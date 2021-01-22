@@ -118,7 +118,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '38_art5_50p_coatt_dim_100_20_ep')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data', '02_runs', '41_art_3-5-6_50p_coatt_dim_100_20_ep')
 path_model_train = os.path.join(run_folder, 'model_train.pkl')
 path_model_dev = os.path.join(run_folder, 'model_dev.pkl')
 path_model_test = os.path.join(run_folder, 'model_test.pkl')
@@ -146,7 +146,7 @@ seq_len = 512
 num_passages = 50
 
 seed = 1234
-n_epochs = 20
+n_epochs = 10
 batch_size = 170
 learning_rate = 0.001
 dropout = 0.4
@@ -154,7 +154,7 @@ momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-device = 'cuda:0'
+device = 'cuda:2'
 
 embed_dim = 200
 hidden_dim = 100
