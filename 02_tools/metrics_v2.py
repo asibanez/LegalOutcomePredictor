@@ -25,7 +25,7 @@ def compute_metrics(Y_ground_truth, Y_predicted_binary, Y_predicted_score):
 #%% Path definitions
 
 base_path = os.getcwd()
-input_path = os.path.join(base_path, '01_data', '02_runs','39_art_3-5-6_50p_art_dim_100_20_ep', 'results.pkl')
+input_path = os.path.join(base_path, '01_data/02_runs','001_art_3-5-6/44_art_3-5-6_50p_coatt_dim_100_30_ep_lr1e-4', 'results.pkl')
 
 #%% Global initialization
 
