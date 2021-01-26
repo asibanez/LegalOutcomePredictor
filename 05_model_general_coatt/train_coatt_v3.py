@@ -15,7 +15,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from model_v14 import ECHR_dataset, ECHR_model
+from model_v15 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -126,7 +126,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs', '05_art_05/44_art_5_eq_41')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs/35_art_all/01_artALL_50p_art_dim_100_5_ep')
 path_model_train = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_train.pkl')
 path_model_dev = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_dev.pkl')
 path_model_test = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_test.pkl')
@@ -150,23 +150,23 @@ input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Ou
 
 debug_flag = False
 save_model_steps_flag = True
-art_text = True
 seq_len = 512
 num_passages = 50
 
 seed = 1234
-n_epochs = 30
-batch_size = 600
+n_epochs = 5
+batch_size = 1100
 learning_rate = 1e-4
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-gpu_ids = [3,4,5]
+gpu_ids = [0,2,3,4,5,6,7]
 
 embed_dim = 200
 hidden_dim = 100
+att_dim = 100
 output_size = 1
 pad_idx = 0
 
@@ -207,7 +207,7 @@ print('Done')
 
 pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
 model = ECHR_model(embed_dim, hidden_dim, output_size, pretrained_embeddings,
-                   dropout, art_text, seq_len, num_passages)
+                   att_dim, dropout, seq_len, num_passages)
 
 # Set device and move model to device
 if use_cuda and torch.cuda.is_available():
@@ -240,10 +240,10 @@ val_loss_history = []
 val_acc_history = []
 
 for idx, epoch in enumerate(tqdm(range(0, n_epochs), desc = 'Training')):
-    train_loss, train_loss_history, train_acc_history = train_epoch_func(model, criterion,
-                                                                         optimizer, train_dl,
-                                                                         train_loss_history,
-                                                                         train_acc_history)
+    train_loss, train_loss_history,train_acc_history = train_epoch_func(model, criterion,
+                                                                        optimizer, train_dl,
+                                                                        train_loss_history,
+                                                                        train_acc_history)
     val_loss_history, val_acc_history = val_epoch_func(model, criterion, dev_dl,
                                                        val_loss_history, val_acc_history)
     if save_model_steps_flag == True:
@@ -287,7 +287,6 @@ with open(output_path_results, 'wb') as fw:
 #%% Save model parameters
 
 model_params = {'debug_flag': debug_flag,
-                'art_text': art_text,
                 'seq_len': seq_len,
                 'num_passages': num_passages,              
                 'seed': seed,
@@ -301,6 +300,7 @@ model_params = {'debug_flag': debug_flag,
                 'device': gpu_ids,
                 'embed_dim': embed_dim,
                 'hidden_dim': hidden_dim,
+                'att_dim': att_dim,
                 'output_size': output_size,
                 'pad_idx': pad_idx}
 
