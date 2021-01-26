@@ -126,7 +126,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs', '13_art_13/34_test')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs', '05_art_05/44_art_5_eq_41')
 path_model_train = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_train.pkl')
 path_model_dev = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_dev.pkl')
 path_model_test = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_test.pkl')
@@ -149,20 +149,20 @@ input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Ou
 #%% Global initialization
 
 debug_flag = False
-art_text = False
+art_text = True
 seq_len = 512
 num_passages = 50
 
 seed = 1234
 n_epochs = 30
-batch_size = 200
+batch_size = 600
 learning_rate = 1e-4
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-gpu_ids = [5,6]
+gpu_ids = [3,4,5]
 
 embed_dim = 200
 hidden_dim = 100
@@ -239,11 +239,12 @@ val_loss_history = []
 val_acc_history = []
 
 for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
+
     train_loss, train_loss_history, train_acc_history = train_epoch_func(model, criterion,
                                                                          optimizer, train_dl,
                                                                          train_loss_history,
                                                                          train_acc_history)
-    print(f'training loss: {train_loss:.6f}')
+
     val_loss_history, val_acc_history = val_epoch_func(model, criterion, dev_dl,
                                                        val_loss_history, val_acc_history)
 
@@ -296,10 +297,9 @@ model_params = {'debug_flag': debug_flag,
                 'momentum': momentum,
                 'wd': wd,
                 'use_cuda': use_cuda,
-                'device': device,
+                'device': gpu_ids,
                 'embed_dim': embed_dim,
                 'hidden_dim': hidden_dim,
-                'att_dim': att_dim,
                 'output_size': output_size,
                 'pad_idx': pad_idx}
 
