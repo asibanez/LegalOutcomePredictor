@@ -149,7 +149,6 @@ input_path_id_2_embed = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Ou
 #%% Global initialization
 
 debug_flag = False
-save_model_steps_flag = True
 art_text = True
 seq_len = 512
 num_passages = 50
@@ -162,7 +161,7 @@ dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 
-use_cuda = True
+use_cuda = False
 gpu_ids = [3,4,5]
 
 embed_dim = 200
@@ -239,15 +238,15 @@ train_acc_history = []
 val_loss_history = []
 val_acc_history = []
 
-for idx, epoch in enumerate(tqdm(range(0, n_epochs), desc = 'Training')):
+for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
+
     train_loss, train_loss_history, train_acc_history = train_epoch_func(model, criterion,
                                                                          optimizer, train_dl,
                                                                          train_loss_history,
                                                                          train_acc_history)
+
     val_loss_history, val_acc_history = val_epoch_func(model, criterion, dev_dl,
                                                        val_loss_history, val_acc_history)
-    if save_model_steps_flag == True:
-        torch.save(model, output_path_model + '.' + str(idx))
 
 #%% Testing
 
@@ -261,7 +260,7 @@ recall = tp / (tp + fn)
 f1 = 2 * (precision * recall) / (precision + recall)
 auc = roc_auc_score(Y_ground_truth, Y_predicted_score)
 
-#%% Print results
+# %% Print results
 
 print(f'\nPrecision: {precision:.3f}')
 print(f'Recall: {recall:.3f}')
