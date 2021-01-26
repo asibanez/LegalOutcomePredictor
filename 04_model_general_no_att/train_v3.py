@@ -1,6 +1,7 @@
 # v0
 # v1  -> Saves model parameters as json
 # v2  -> Adds flexible multiprocessing
+# v3  -> Train and validation accuracy histories added
 
 #%% Imports
 
@@ -18,9 +19,10 @@ from model_v14 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
-def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
+def train_epoch_func(model, criterion, optimizer, train_dl,
+                     train_loss_history, train_acc_history):
     model.train()
-    train_acc = 0
+    sum_correct = 0
     total_entries = 0
     sum_train_loss = 0
     
@@ -49,17 +51,21 @@ def train_epoch_func(model, criterion, optimizer, train_dl, train_loss_history):
         current_batch_size = X_art.size()[0]
         total_entries += current_batch_size
         sum_train_loss += (loss.item() * current_batch_size)
+        pred = torch.round(pred.view(pred.shape[0]))
+        sum_correct += (pred == Y).sum().item()   
         
     avg_train_loss = sum_train_loss / total_entries
+    train_accuracy = sum_correct / total_entries
     train_loss_history.append(avg_train_loss)
+    train_acc_history.append(train_accuracy)
+    print(f'train loss: {avg_train_loss:.6f} and accuracy: {train_accuracy:.6f}')
     
-    return avg_train_loss, train_loss_history
+    return avg_train_loss, train_loss_history, train_acc_history
 
 #%% Validation function
 
 def val_epoch_func(model, criterion, dev_dl, val_loss_history):
     model.eval()
-    val_acc = 0
     sum_correct = 0
     sum_val_loss = 0
     total_entries = 0
@@ -227,11 +233,15 @@ criterion = nn.BCELoss()
 #%% Training
 
 train_loss_history = []
+train_acc_history = []
 val_loss_history = []
+val_acc_history = []
 
 for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
-    train_loss, train_loss_history = train_epoch_func(model, criterion,
-                                                      optimizer, train_dl, train_loss_history)
+    train_loss, train_loss_history, train_acc_hisotry = train_epoch_func(model, criterion,
+                                                                         optimizer, train_dl,
+                                                                         train_loss_history,
+                                                                         train_acc_history)
     print(f'training loss: {train_loss:.6f}')
     _, _, val_loss_history = val_epoch_func(model, criterion, dev_dl, val_loss_history)
 

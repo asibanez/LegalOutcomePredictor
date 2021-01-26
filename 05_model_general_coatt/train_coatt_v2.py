@@ -1,5 +1,6 @@
 # v0
 # v1  -> Saves model parameters as json
+# v2  -> Adds flexible multiprocessing
 
 #%% Imports
 
@@ -86,7 +87,7 @@ def val_epoch_func(model, criterion, dev_dl, val_loss_history):
     avg_loss = sum_val_loss / total_entries
     accuracy = sum_correct / total_entries
     val_loss_history.append(avg_loss)
-    print("valid loss %.3f and accuracy %.3f" % (avg_loss, accuracy))
+    print(f'valid loss: {avg_loss:.6f} and accuracy: {accuracy:.6f}')
     
     return avg_loss, accuracy, val_loss_history
 
@@ -154,8 +155,7 @@ momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-#device = 'cuda:2'
-device = 'cuda'
+gpu_ids = [5,6]
 
 embed_dim = 200
 hidden_dim = 100
@@ -202,14 +202,20 @@ pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
 model = ECHR_model(embed_dim, hidden_dim, output_size, pretrained_embeddings,
                    att_dim, dropout, art_text, seq_len, num_passages)
 
-# Move to cuda
+# Set device and move model to device
 if use_cuda and torch.cuda.is_available():
     print('Moving model to cuda')
-    model = model.to(device)
-###
-    model = nn.DataParallel(model)
-###
+    if len(gpu_ids) > 1:
+        device = torch.device(f'cuda:{gpu_ids[0]}')
+        model = nn.DataParallel(model, device_ids = gpu_ids)
+        model = model.to(device)
+    else:
+        device = torch.device('cuda:' + str(gpu_ids[0]))
+        model = model.to(device)
     print('Done')
+else:
+    device = torch.device('cpu')
+    model = model.to(device)
 
 print(model)
 
@@ -227,7 +233,7 @@ val_loss_history = []
 for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
     train_loss, train_loss_history = train_epoch_func(model, criterion,
                                                       optimizer, train_dl, train_loss_history)
-    print("training loss: ", train_loss)
+    print(f'training loss: {train_loss:.6f}')
     _, _, val_loss_history = val_epoch_func(model, criterion, dev_dl, val_loss_history)
 
 #%% Testing

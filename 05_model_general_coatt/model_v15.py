@@ -49,7 +49,7 @@ class ECHR_dataset(Dataset):
 class ECHR_model(nn.Module):
     
     def __init__(self, input_size, hidden_dim, output_size, pretrained_embeddings,
-                 att_dim, dropout, art_text, seq_len, num_passages):
+                 att_dim, dropout, seq_len, num_passages):
         super(ECHR_model, self).__init__()
 
         self.num_layers = 1
@@ -60,7 +60,6 @@ class ECHR_model(nn.Module):
         self.att_dim = att_dim
         self.num_passages = num_passages #5 #300
         self.seq_len = seq_len #512
-        self.art_text = art_text
 
         # Embedding
         self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
