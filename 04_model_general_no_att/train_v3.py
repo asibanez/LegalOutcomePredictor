@@ -64,7 +64,7 @@ def train_epoch_func(model, criterion, optimizer, train_dl,
 
 #%% Validation function
 
-def val_epoch_func(model, criterion, dev_dl, val_loss_history):
+def val_epoch_func(model, criterion, dev_dl, val_loss_history, val_acc_history):
     model.eval()
     sum_correct = 0
     sum_val_loss = 0
@@ -93,9 +93,10 @@ def val_epoch_func(model, criterion, dev_dl, val_loss_history):
     avg_loss = sum_val_loss / total_entries
     accuracy = sum_correct / total_entries
     val_loss_history.append(avg_loss)
+    val_acc_history.append(accuracy)
     print(f'valid loss: {avg_loss:.6f} and accuracy: {accuracy:.6f}')
     
-    return avg_loss, accuracy, val_loss_history
+    return val_loss_history, val_acc_history
 
 #%% Test function
 
@@ -238,12 +239,13 @@ val_loss_history = []
 val_acc_history = []
 
 for epoch in tqdm(range(0, n_epochs), desc = 'Training'):
-    train_loss, train_loss_history, train_acc_hisotry = train_epoch_func(model, criterion,
+    train_loss, train_loss_history, train_acc_history = train_epoch_func(model, criterion,
                                                                          optimizer, train_dl,
                                                                          train_loss_history,
                                                                          train_acc_history)
     print(f'training loss: {train_loss:.6f}')
-    _, _, val_loss_history = val_epoch_func(model, criterion, dev_dl, val_loss_history)
+    val_loss_history, val_acc_history = val_epoch_func(model, criterion, dev_dl,
+                                                       val_loss_history, val_acc_history)
 
 #%% Testing
 
@@ -271,7 +273,9 @@ torch.save(model, output_path_model)
 #%% Save results
 
 results = {'training_loss': train_loss_history,
+           'training_acc': train_acc_history,
            'validation_loss': val_loss_history,
+           'validation_acc': val_loss_history,
            'Y_test_ground_truth': Y_ground_truth,
            'Y_test_prediction_scores': Y_predicted_score,
            'Y_test_prediction_binary': Y_predicted_binary}
