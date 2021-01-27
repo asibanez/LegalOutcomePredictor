@@ -2,7 +2,7 @@
 # v1  -> Saves model parameters as json
 # v2  -> Adds flexible multiprocessing
 # v3  -> Train and validation accuracy histories added
-# v4  -> Updated tran and validation metrics history recording
+# v4  -> Updated train and validation metrics history saving
 
 #%% Imports
 
@@ -20,8 +20,7 @@ from model_v15 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
-def train_epoch_func(model, criterion, optimizer, train_dl,
-                     train_loss_history, train_acc_history):
+def train_epoch_func(model, criterion, optimizer, train_dl):
     model.train()
     sum_correct = 0
     total_entries = 0
@@ -57,15 +56,13 @@ def train_epoch_func(model, criterion, optimizer, train_dl,
         
     avg_train_loss = sum_train_loss / total_entries
     train_accuracy = sum_correct / total_entries
-    train_loss_history.append(avg_train_loss)
-    train_acc_history.append(train_accuracy)
-    print(f'train loss: {avg_train_loss:.6f} and accuracy: {train_accuracy:.6f}')
+    print(f'train loss: {avg_train_loss:.4f} and accuracy: {train_accuracy:.4f}')
     
-    return avg_train_loss, train_loss_history, train_acc_history
+    return avg_train_loss, train_accuracy
 
 #%% Validation function
 
-def val_epoch_func(model, criterion, dev_dl, val_loss_history, val_acc_history):
+def val_epoch_func(model, criterion, dev_dl):
     model.eval()
     sum_correct = 0
     sum_val_loss = 0
@@ -91,13 +88,11 @@ def val_epoch_func(model, criterion, dev_dl, val_loss_history, val_acc_history):
         pred = torch.round(pred.view(pred.shape[0]))
         sum_correct += (pred == Y).sum().item()             
     
-    avg_loss = sum_val_loss / total_entries
-    accuracy = sum_correct / total_entries
-    val_loss_history.append(avg_loss)
-    val_acc_history.append(accuracy)
-    print(f'valid loss: {avg_loss:.6f} and accuracy: {accuracy:.6f}')
+    avg_val_loss = sum_val_loss / total_entries
+    val_accuracy = sum_correct / total_entries
+    print(f'valid loss: {avg_val_loss:.4f} and accuracy: {val_accuracy:.4f}')
     
-    return val_loss_history, val_acc_history
+    return avg_val_loss, val_accuracy
 
 #%% Test function
 
@@ -241,12 +236,15 @@ val_loss_history = []
 val_acc_history = []
 
 for idx, epoch in enumerate(tqdm(range(0, n_epochs), desc = 'Training')):
-    train_loss, train_loss_history,train_acc_history = train_epoch_func(model, criterion,
-                                                                        optimizer, train_dl,
-                                                                        train_loss_history,
-                                                                        train_acc_history)
-    val_loss_history, val_acc_history = val_epoch_func(model, criterion, dev_dl,
-                                                       val_loss_history, val_acc_history)
+    
+    train_loss, train_acc = train_epoch_func(model, criterion, optimizer, train_dl)
+    train_loss_history.append(train_loss)
+    train_acc_history.append(train_acc)
+
+    val_loss, val_acc = val_epoch_func(model, criterion, dev_dl)
+    val_loss_history.append(val_loss)
+    val_acc_history.append(val_acc) 
+    
     if save_model_steps_flag == True:
         torch.save(model, output_path_model + '.' + str(idx))
 
@@ -264,10 +262,10 @@ auc = roc_auc_score(Y_ground_truth, Y_predicted_score)
 
 #%% Print results
 
-print(f'\nPrecision: {precision:.3f}')
-print(f'Recall: {recall:.3f}')
-print(f'F1: {f1:.3f}')
-print(f'AUC: {auc:.3f}\n')
+print(f'\nPrecision: {precision:.4f}')
+print(f'Recall: {recall:.4f}')
+print(f'F1: {f1:.4f}')
+print(f'AUC: {auc:.4f}\n')
 
 #%% Save model 
 
