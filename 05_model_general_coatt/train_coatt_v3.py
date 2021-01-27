@@ -126,7 +126,7 @@ def test_func(model, test_dl):
 
 #%% Path definition
 
-run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs/05_art_05/45_test')
+run_folder = os.path.join(os.path.split(os.getcwd())[0], '01_data/02_runs/35_art_all/01_artALL_50p_art_dim_100_5_ep')
 path_model_train = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_train.pkl')
 path_model_dev = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_dev.pkl')
 path_model_test = os.path.join(os.path.split(run_folder)[0], '00_input_data', 'model_test.pkl')
@@ -154,15 +154,15 @@ seq_len = 512
 num_passages = 50
 
 seed = 1234
-n_epochs = 2
-batch_size = 400
+n_epochs = 10
+batch_size = 1000
 learning_rate = 1e-4
 dropout = 0.4
 momentum = 0.9
 wd = 0.00001
 
 use_cuda = True
-gpu_ids = [0,1,2]
+gpu_ids = [0,1,2,3,4,5,6,7]
 
 embed_dim = 200
 hidden_dim = 100
