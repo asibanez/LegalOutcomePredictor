@@ -192,3 +192,13 @@ plt.xlabel('num tokens in echr art')
 plt.ylabel('freq')
 plt.show()
 
+
+
+#-------------------------------------------------------------------
+# Extract cases with violated arts
+vio_arts = case_train_df.VIOLATED_ARTICLES
+case_viol_art_train_df = case_train_df[[x != [] for x in vio_arts]]
+vio_par = case_viol_art_train_df.VIOLATED_PARAGRAPHS
+case_viol_par_train_df = case_viol_art_train_df[[x != [] for x in vio_par]]
+
+
