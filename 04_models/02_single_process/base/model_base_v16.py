@@ -113,6 +113,7 @@ class ECHR_model(nn.Module):
         x_case = self.embed(X_case)                                    # batch_size x (seq_len x n_passages) x embed_dim
         
         # Article encoding
+        self.lstm_art.flatten_parameters()
         x_art = self.lstm_art(x_art)                                   # Tuple (len = 2)
         x_art_fwd = x_art[0][:, -1, 0:bilstm_b]                        # batch_size x hidden_dim
         x_art_bkwd = x_art[0][:, 0, bilstm_b:bilstm_e]                 # batch_size x hidden_dim
@@ -128,6 +129,7 @@ class ECHR_model(nn.Module):
         for idx in range(0, self.num_passages):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
+            self.lstm_case_sent.flatten_parameters()
             x_aux = self.lstm_case_sent(x_case[:,span_b:span_e,:])[0] # batch_size x seq_len x (hidden_dim x 2)
             x_aux = self.drops(x_aux)                                 # batch_size x seq_len x (hidden_dim x 2)
             # Attention
@@ -142,6 +144,7 @@ class ECHR_model(nn.Module):
         x_case_sent = torch.cat(list(x_case_dict.values()), dim = 1)  # batch_size x n_passages x (hidden_dim x 2)
                
         # Case document encoding
+        self.lstm_case_doc.flatten_parameters()
         x_case_doc = self.lstm_case_doc(x_case_sent)                  # Tuple (len = 2)
         x_case_doc_fwd = x_case_doc[0][:, -1, 0:bilstm_b]             # batch_size x hidden_dim
         x_case_doc_bkwd = x_case_doc[0][:, 0, bilstm_b:bilstm_e]      # batch_size x hidden_dim
@@ -157,5 +160,3 @@ class ECHR_model(nn.Module):
         x = self.sigmoid(x)                                           # batch size x output_size
         
         return x
-
-
