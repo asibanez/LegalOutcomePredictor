@@ -184,8 +184,8 @@ def main():
 #    model_dev = model_dev[0:10]
 ####
 
-    # Policy embeddings load
-    print(datetime.datetime.now(), 'Loading policy embeddings')
+    # Load embeddings
+    print(datetime.datetime.now(), 'Loading embeddings')
     with open(args.path_embed, 'rb') as fr:
         id_2_embed = pickle.load(fr)
     print(datetime.datetime.now(), 'Done')

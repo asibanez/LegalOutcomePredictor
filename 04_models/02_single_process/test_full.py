@@ -1,7 +1,7 @@
-# Imports
+#%% Imports
+
 import os
 import json
-import boto3
 import pickle
 import datetime
 import argparse
@@ -11,45 +11,32 @@ import torch
 ####
 import torch.nn as nn
 ####
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from model_full_v1 import LM_dataset, LM_model
+from base.model_base_v16 import ECHR_dataset, ECHR_model
 
 # Test function
 def test_f(args):
     # Load holdout data
     model_test = pd.read_pickle(args.path_model_holdout)
     
-    # Policy embeddings
-    s3 = boto3.resource('s3') 
-    bytes = s3.Object(args.aws_bucket_name, args.path_emb_leaf_nodes).get()['Body'].read() 
-    fast_text_leaf_nodes_dict = pickle.loads(bytes)
-    
-    # Loss description embeddings
-    s3 = boto3.resource('s3') 
-    bytes = s3.Object(args.aws_bucket_name, args.path_emb_loss_desc).get()['Body'].read() 
-    fast_text_loss_desc_dict = pickle.loads(bytes)
-    
-    # Dictionary embedding extraction
-    id_2_embed_leaf_nodes = fast_text_leaf_nodes_dict['id_to_embedding_mapping']
-    id_2_embed_loss_desc = fast_text_loss_desc_dict['id_to_embedding_mapping']  
+    # Load embeddings
+    print(datetime.datetime.now(), 'Loading embeddings')
+    with open(args.path_embed, 'rb') as fr:
+        id_2_embed = pickle.load(fr)
+    print(datetime.datetime.now(), 'Done')
     
     # Instantiate datasets
-    test_dataset = LM_dataset(model_test)
+    test_dataset = ECHR_dataset(model_test)
     
     # Instantiate dataloader
     test_dl = DataLoader(test_dataset, batch_size = args.batch_size, shuffle = False)
     
     # Instantiate model and load model weights
-    str_vars = model_test.columns.drop(['LOSS_DESCRIPTION', 'LEAF_NODE_TEXTS', 'full_denial'])
-    num_str_vars = len(str_vars)
-    pretrained_embeddings_leaf_nodes = torch.FloatTensor(list(id_2_embed_leaf_nodes.values()))
-    pretrained_embeddings_loss_desc = torch.FloatTensor(list(id_2_embed_loss_desc.values()))
+    pretrained_embeddings = torch.FloatTensor(list(id_2_embed.values()))
     device = torch.device(args.gpu_id)
-    model = LM_model(args,
-                    pretrained_embeddings_leaf_nodes,
-                    pretrained_embeddings_loss_desc, num_str_vars)
+    model = ECHR_model(args, pretrained_embeddings)
     
     ####
     #model = nn.DataParallel(model, device_ids = [args.gpu_id])
@@ -89,18 +76,14 @@ def main():
                        help = 'input data folder')
     parser.add_argument('--work_dir', default = None, type = str, required = True,
                        help = 'work folder')
-    parser.add_argument('--aws_bucket_name', default = None, type = str, required = True,
-                       help = 'aws bucket name')
-    parser.add_argument('--path_emb_leaf_nodes', default = None, type = str, required = True,
-                       help = 'path to file with leaf node embeddings')
-    parser.add_argument('--path_emb_loss_desc', default = None, type = str, required = True,
-                       help = 'path to file with loss description embeddings')   
+    parser.add_argument('--path_embed', default = None, type = str, required = True,
+                       help = 'path to file with embeddings')   
     parser.add_argument('--batch_size', default = None, type = int, required = True,
                        help = 'train batch size')
     parser.add_argument('--seq_len', default = None, type = int, required = True,
                        help = 'text sequence length')
-    parser.add_argument('--num_leaf_nodes', default = None, type = int, required = True,
-                       help = 'number of leaf nodes considered')
+    parser.add_argument('--num_passages', default = None, type = int, required = True,
+                       help = 'number of passages considered')
     parser.add_argument('--embed_dim', default = None, type = int, required = True,
                        help = 'embedding dimension')
     parser.add_argument('--hidden_dim', default = None, type = int, required = True,
@@ -115,7 +98,7 @@ def main():
     args.dropout = 0.4
     
     # Path initialization
-    args.path_model_holdout = os.path.join(args.input_dir, 'holdout_model.pkl')
+    args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
     args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
