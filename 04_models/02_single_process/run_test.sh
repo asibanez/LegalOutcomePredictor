@@ -6,7 +6,7 @@ INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed
 WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/33_art6_50p_coatt_TEST
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
 
-python -m ipdb test_full.py \
+python -m ipdb test.py \
     --input_dir=$INPUT_DIR \
     --work_dir=$WORK_DIR \
     --path_embed=$PATH_EMBED \

@@ -12,8 +12,7 @@ import matplotlib.pyplot as plt
 
 #%% Path definition
 
-base_folder = os.getcwd()
-input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
+input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/13_Legal_Outcome_Predictor/00_data/01_preprocessed'
 
 ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
 case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
@@ -193,12 +192,46 @@ plt.ylabel('freq')
 plt.show()
 
 
-
-#-------------------------------------------------------------------
+#%%-------------------------------------------------------------------
 # Extract cases with violated arts
 vio_arts = case_train_df.VIOLATED_ARTICLES
 case_viol_art_train_df = case_train_df[[x != [] for x in vio_arts]]
+violated_arts = list(case_viol_art_train_df['VIOLATED_ARTICLES'])
+violated_arts = [x for sublist in violated_arts for x in sublist]
+print(pd.value_counts(violated_arts))
+
+#%% Extract cases with violated paragraphs
 vio_par = case_viol_art_train_df.VIOLATED_PARAGRAPHS
 case_viol_par_train_df = case_viol_art_train_df[[x != [] for x in vio_par]]
 
+violated_pars = list(case_viol_par_train_df['VIOLATED_PARAGRAPHS'])
+violated_pars = [x for sublist in violated_pars for x in sublist]
+print(pd.value_counts(violated_pars))
 
+violated_pars_set = list(set(violated_pars))
+print(violated_pars_set)
+
+#%% Extract cases with specific violated art
+vio_arts = case_train_df.VIOLATED_ARTICLES
+filtering = ['7' in x for x in vio_arts]
+result = case_train_df[filtering]
+print(result)
+
+#%% Extract cases with specific violated paragraph and without specific article
+vio_arts = case_train_df.VIOLATED_ARTICLES
+vio_pars = case_train_df.VIOLATED_PARAGRAPHS
+filtering_1 = np.array([('5' not in x) for x in vio_arts])
+filtering_2 = np.array([(len(x) > 1) and '5-5' in x for x in vio_pars])
+filtering = filtering_1 & filtering_2
+result = case_train_df[filtering_2]
+print(result)
+
+#%% 
+import re
+for key in ECHR_dict.keys():
+    print(key, '\n', ECHR_dict[key],'\n')
+
+aux = ECHR_dict[66]
+aux
+
+re.split('1', aux)

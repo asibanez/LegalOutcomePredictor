@@ -60,6 +60,7 @@ class ECHR_model(nn.Module):
         self.att_dim = args.att_dim
         self.num_passages = args.num_passages
         self.seq_len = args.seq_len
+        self.query_att = nn.Parameter(torch.randn((1, self.att_dim), requires_grad = True))
 
         # Embedding
         self.embed = nn.Embedding.from_pretrained(pretrained_embeddings)
@@ -74,32 +75,20 @@ class ECHR_model(nn.Module):
                                 bidirectional = True,
                                 batch_first = True)      
         
-        # Encode case senteces
-        self.lstm_case_sent = nn.LSTM(input_size = self.input_size,
+        # Encode case passages
+        self.lstm_case_pass = nn.LSTM(input_size = self.input_size,
                                       hidden_size = self.h_dim,
                                       num_layers = self.num_layers,
                                       bidirectional = True,
                                       batch_first = True)
         
-        # Encode case document
-        self.lstm_case_doc = nn.LSTM(input_size = self.h_dim * 2,
-                                     hidden_size = self.h_dim,
-                                     num_layers = self.num_layers,
-                                     bidirectional = True,
-                                     batch_first = True)
-                
-        # Fully connected with article text
-        self.fc_1 = nn.Linear(in_features = self.h_dim * 2 * 2,
-                              out_features = self.output_size)
-        
+        # Fully connected projection case passage
+        self.fc_proj_case = nn.Linear(in_features = self.h_dim * 2,
+                                      out_features = self.att_dim)
 
-        # Fully connected query vector
-        self.fc_query = nn.Linear(in_features = self.h_dim * 2,
-                                  out_features = self.att_dim)
-
-        # Fully connected context
-        self.fc_context = nn.Linear(in_features = self.h_dim * 2,
-                                    out_features = self.att_dim)
+        # Fully connected output
+        self.fc_out = nn.Linear(in_features = self.h_dim * 2 * 2,
+                                out_features = self.output_size)
 
         # Sigmoid
         self.sigmoid = nn.Sigmoid()
@@ -120,41 +109,33 @@ class ECHR_model(nn.Module):
         x_art = torch.cat((x_art_fwd, x_art_bkwd), dim = 1)            # batch_size x (hidden_dim x 2)
         x_art = self.drops(x_art)                                      # batch_size x (hidden_dim x 2) 
         
-        # Query vector
-        query_v = self.fc_query(x_art).unsqueeze(2)                    # batch_size x att_dim x 1
-        
         # Case sentence encoding
-        x_case_dict = {}
+        x_case_pass_dict = {}
         
         for idx in range(0, self.num_passages):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
-            self.lstm_case_sent.flatten_parameters()
-            x_aux = self.lstm_case_sent(x_case[:,span_b:span_e,:])[0] # batch_size x seq_len x (hidden_dim x 2)
-            x_aux = self.drops(x_aux)                                 # batch_size x seq_len x (hidden_dim x 2)
-            # Co-attention
-            projection = torch.tanh(self.fc_context(x_aux))           # batch_size x seq_len x att_dim
-            alpha = torch.bmm(projection, query_v)                    # batch _size x seq_len x 1
-            alpha = torch.softmax(alpha, dim = 1)                     # batch_size x seq_len x 1
-            att_output = x_aux * alpha                                # batch_size x seq_len x (hidden_dim x 2)
-            att_output = torch.sum(att_output, axis = 1)              # batch_size x (hidden_dim x 2)            
-            att_output = att_output.unsqueeze(1)                      # batch_size x 1 x (hidden_dim x 2)
-            x_case_dict[idx] = att_output                             # batch_size x 1 x (hidden_dim x 2)
+            self.lstm_case_pass.flatten_parameters()
+            x_aux = self.lstm_case_pass(x_case[:,span_b:span_e,:])    # batch_size x seq_len x (hidden_dim x 2)
+            x_aux_fwd = x_aux[0][:, -1, 0:bilstm_b]                   # batch_size x hidden_dim
+            x_aux_bkwd = x_aux[0][:, 0, bilstm_b:bilstm_e]            # batch_size x hidden_dim
+            x_aux = torch.cat((x_aux_fwd, x_aux_bkwd), dim = 1)       # batch_size x (hidden_dim x 2)
+            x_aux = self.drops(x_aux)                                 # batch_size x (hidden_dim x 2)
+            x_case_pass_dict[idx] = x_aux.unsqueeze(1)                # batch_size x 1 x (hidden_dim x 2)
         
-        x_case_sent = torch.cat(list(x_case_dict.values()), dim = 1)  # batch_size x n_passages x (hidden_dim x 2)
+        x_case_pass=torch.cat(list(x_case_pass_dict.values()),dim=1)  # batch_size x n_passages x (hidden_dim x 2)
                
-        # Case document encoding
-        self.lstm_case_doc.flatten_parameters()
-        x_case_doc = self.lstm_case_doc(x_case_sent)                  # Tuple (len = 2)
-        x_case_doc_fwd = x_case_doc[0][:, -1, 0:bilstm_b]             # batch_size x hidden_dim
-        x_case_doc_bkwd = x_case_doc[0][:, 0, bilstm_b:bilstm_e]      # batch_size x hidden_dim
-        x_case_doc = torch.cat((x_case_doc_fwd, x_case_doc_bkwd),
-                               dim = 1)                               # batch_size x (hidden_dim x 2)
-        x_case_doc = self.drops(x_case_doc)                           # batch_size x (hidden_dim x 2)
+        # Case document encoding - attention
+        projection = torch.tanh(self.fc_proj_case(x_case_pass))       # batch_size x n_passages x att_dim
+        query_att = torch.transpose(self.query_att, 0, 1)             # att_dim x 1
+        alpha = torch.matmul(projection, query_att)                   # batch_size x n_passages x 1
+        alpha = torch.softmax(alpha, dim = 1)                         # batch_size x n_passages x 1
+        att_output = x_case_pass * alpha                              # batch_size x n_passages x (hidden_dim x 2)
+        x_case = torch.sum(att_output, axis = 1)                      # batch_size x (hidden_dim x 2)            
         
         # Concatenate article and passage encodings
-        x = torch.cat((x_art, x_case_doc), dim = 1)                   # batch size x (hidden_dim x 2 x 2)
-        x = self.fc_1(x)                                              # batch size x output_size
+        x = torch.cat((x_art, x_case), dim = 1)                       # batch size x (hidden_dim x 2 x 2)
+        x = self.fc_out(x)                                            # batch size x output_size
         
         # Sigmoid function
         x = self.sigmoid(x)                                           # batch size x output_size
