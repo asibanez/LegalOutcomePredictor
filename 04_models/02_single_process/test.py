@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from attention.model_attn_v16 import ECHR_dataset, ECHR_model
+from attention_v2.model_attn_v2 import ECHR_dataset, ECHR_model
 
 # Test function
 def test_f(args):
