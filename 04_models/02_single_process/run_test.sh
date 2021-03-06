@@ -3,10 +3,10 @@
 #PATH_EMBED=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\01_data\\01_preprocessed\\id_2_embed_dict.pkl
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p
-WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/33_art6_50p_coatt_TEST
+WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/34_art6_50p_att_TEST
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
 
-python -m ipdb test.py \
+python test.py \
     --input_dir=$INPUT_DIR \
     --work_dir=$WORK_DIR \
     --path_embed=$PATH_EMBED \

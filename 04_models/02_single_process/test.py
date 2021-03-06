@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from base.model_base_v16 import ECHR_dataset, ECHR_model
+from attention.model_attn_v16 import ECHR_dataset, ECHR_model
 
 # Test function
 def test_f(args):
@@ -22,10 +22,8 @@ def test_f(args):
     model_test = pd.read_pickle(args.path_model_holdout)
     
     # Load embeddings
-    print(datetime.datetime.now(), 'Loading embeddings')
     with open(args.path_embed, 'rb') as fr:
         id_2_embed = pickle.load(fr)
-    print(datetime.datetime.now(), 'Done')
     
     # Instantiate datasets
     test_dataset = ECHR_dataset(model_test)
@@ -52,16 +50,15 @@ def test_f(args):
     Y_predicted_binary = []
     Y_ground_truth = []
 
-    for X_str, X_loss_desc, X_leaf_node_texts, Y in tqdm(test_dl, desc = 'Testing'):
+    for X_art, X_case, Y in tqdm(test_dl, desc = 'Testing'):
         # Move to cuda
-        X_str = X_str.cuda(device)
-        X_loss_desc = X_loss_desc.cuda(device)
-        X_leaf_node_texts = X_leaf_node_texts.cuda(device)
-        Y = Y.cuda(device)
+        X_art = X_art.to(device)
+        X_case = X_case.to(device)
+        Y = Y.to(device)
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_str, X_loss_desc, X_leaf_node_texts).view(-1)
+            pred_batch_score = model(X_art, X_case).view(-1)
             pred_batch_binary = torch.round(pred_batch_score.view(pred_batch_score.shape[0]))
             Y_predicted_score += pred_batch_score.tolist()
             Y_predicted_binary += pred_batch_binary.tolist()
