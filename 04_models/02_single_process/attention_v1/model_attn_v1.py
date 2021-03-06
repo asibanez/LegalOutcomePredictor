@@ -116,7 +116,7 @@ class ECHR_model(nn.Module):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             self.lstm_case_pass.flatten_parameters()
-            x_aux = self.lstm_case_pass(x_case[:,span_b:span_e,:])    # batch_size x seq_len x (hidden_dim x 2)
+            x_aux = self.lstm_case_pass(x_case[:,span_b:span_e,:])    # Tuple (len = 2)
             x_aux_fwd = x_aux[0][:, -1, 0:bilstm_b]                   # batch_size x hidden_dim
             x_aux_bkwd = x_aux[0][:, 0, bilstm_b:bilstm_e]            # batch_size x hidden_dim
             x_aux = torch.cat((x_aux_fwd, x_aux_bkwd), dim = 1)       # batch_size x (hidden_dim x 2)
