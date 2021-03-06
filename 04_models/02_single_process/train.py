@@ -179,10 +179,10 @@ def main():
     model_dev = pd.read_pickle(path_model_dev)
     print(datetime.datetime.now(), 'Done')
 
-#### Slicing for debugging
-    model_train = model_train[0:50]
-    model_dev = model_dev[0:10]
-####
+### Slicing for debugging
+    #model_train = model_train[0:50]
+    #model_dev = model_dev[0:10]
+###
 
     # Load embeddings
     print(datetime.datetime.now(), 'Loading embeddings')
