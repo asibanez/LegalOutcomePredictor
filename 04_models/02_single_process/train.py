@@ -11,7 +11,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from attention_v2.model_attn_v2 import ECHR_dataset, ECHR_model
+from model_attention_v3.model_attn_v3 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -135,6 +135,8 @@ def main():
                        help = 'text sequence length')
     parser.add_argument('--num_passages', default = None, type = int, required = True,
                        help = 'number of leaf nodes considered')
+    parser.add_argument('--num_par_arts', default = None, type = int, required = True,
+                       help = 'number of leaf nodes considered')          
     parser.add_argument('--embed_dim', default = None, type = int, required = True,
                        help = 'embedding dimension')
     parser.add_argument('--hidden_dim', default = None, type = int, required = True,
@@ -180,8 +182,8 @@ def main():
     print(datetime.datetime.now(), 'Done')
 
 ### Slicing for debugging
-    #model_train = model_train[0:50]
-    #model_dev = model_dev[0:10]
+    model_train = model_train[0:50]
+    model_dev = model_dev[0:10]
 ###
 
     # Load embeddings
