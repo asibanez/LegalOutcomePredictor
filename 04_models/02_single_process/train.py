@@ -136,7 +136,7 @@ def main():
     parser.add_argument('--num_passages', default = None, type = int, required = True,
                        help = 'number of leaf nodes considered')
     parser.add_argument('--num_par_arts', default = None, type = int, required = True,
-                       help = 'number of leaf nodes considered')          
+                       help = 'number of paragraphs per article')
     parser.add_argument('--embed_dim', default = None, type = int, required = True,
                        help = 'embedding dimension')
     parser.add_argument('--hidden_dim', default = None, type = int, required = True,
@@ -182,8 +182,8 @@ def main():
     print(datetime.datetime.now(), 'Done')
 
 ### Slicing for debugging
-    model_train = model_train[0:50]
-    model_dev = model_dev[0:10]
+    #model_train = model_train[0:50]
+    #model_dev = model_dev[0:10]
 ###
 
     # Load embeddings

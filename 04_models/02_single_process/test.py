@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from attention_v2.model_attn_v2 import ECHR_dataset, ECHR_model
+from model_attention_v3.model_attn_v3 import ECHR_dataset, ECHR_model
 
 # Test function
 def test_f(args):
@@ -81,6 +81,8 @@ def main():
                        help = 'text sequence length')
     parser.add_argument('--num_passages', default = None, type = int, required = True,
                        help = 'number of passages considered')
+    parser.add_argument('--num_par_arts', default = None, type = int, required = True,
+                       help = 'number of paragraphs per article')
     parser.add_argument('--embed_dim', default = None, type = int, required = True,
                        help = 'embedding dimension')
     parser.add_argument('--hidden_dim', default = None, type = int, required = True,
