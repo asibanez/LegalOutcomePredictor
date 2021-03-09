@@ -1,17 +1,17 @@
-#INPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\01_preprocessed\\01_article_split\\art_06_50p_par_SHORT
-#OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\02_runs\\batch_02\\art_06\\38_TEST
-#PATH_EMBED=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\01_preprocessed\\id_2_embed_dict.pkl
+INPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\01_preprocessed\\01_article_split\\art_06_50p_par_SHORT
+OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\02_runs\\batch_02\\art_06\\38_TEST
+PATH_EMBED=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\01_preprocessed\\id_2_embed_dict.pkl
 
-INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p_par
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/36_art6_50p_att_v3_TEST
-PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
+#INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p_par
+#OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/36_art6_50p_att_v3_TEST
+#PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
 
-python train.py \
+python -m pdb train.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
     --path_embed=$PATH_EMBED \
-    --n_epochs=30 \
-    --batch_size=150 \
+    --n_epochs=2 \
+    --batch_size=5 \
     --lr=1e-4 \
     --wd=0.1e-5 \
     --dropout=0.4 \
@@ -29,7 +29,7 @@ python train.py \
     --use_cuda=True \
     --gpu_ids=1,2,3
 
-#read -p 'EOF'
+read -p 'EOF'
 
-#--batch_size=1000
+#--batch_size=150
 #--n_epochs=30

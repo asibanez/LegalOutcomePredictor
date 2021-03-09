@@ -117,7 +117,7 @@ class ECHR_model(nn.Module):
         query_att = self.fc_query(x_art).unsqueeze(2)                  # batch_size x att_dim x 1
         query_att = torch.transpose(query_att, 1, 2)                   # batch_size x 1 x att_dim
         
-        # Case sentence encoding
+        # Case passage encoding
         x_case_pass_dict = {}
         
         for idx in range(0, self.num_passages):

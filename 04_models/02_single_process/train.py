@@ -11,7 +11,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from model_attention_v3.model_attn_v3 import ECHR_dataset, ECHR_model
+from model_attention_v4.model_attn_v4 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -182,8 +182,8 @@ def main():
     print(datetime.datetime.now(), 'Done')
 
 ### Slicing for debugging
-    #model_train = model_train[0:50]
-    #model_dev = model_dev[0:10]
+    model_train = model_train[0:50]
+    model_dev = model_dev[0:10]
 ###
 
     # Load embeddings

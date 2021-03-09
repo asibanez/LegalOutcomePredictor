@@ -1,6 +1,6 @@
 # v1  -> Bug corrected in call to compute metrics
 # v2  -> Plots learning curves
-# v3  -> Reads result in jston fomrmat. Input path updated
+# v3  -> Reads result in jston format. Input path updated
 
 #%% Imports
 
@@ -26,7 +26,7 @@ def compute_metrics(Y_ground_truth, Y_predicted_binary, Y_predicted_score):
 
 #%% Path definitions
 
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/13_Legal_Outcome_Predictor/00_data/02_runs/art_06/32_art6_50p_coatt_dim_100_30_ep_lr1e-4'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/02_runs/batch_02/art_06/36_art6_50p_att_v3_TEST'
 
 #%% Global initialization
 
@@ -41,9 +41,9 @@ with open(input_path) as fr:
 
 #%% Read data pickle
 
-input_path = os.path.join(base_path, 'results.pkl')
-with open(input_path, 'rb') as fr:
-    results = pickle.load(fr)    
+#input_path = os.path.join(base_path, 'results.pkl')
+#with open(input_path, 'rb') as fr:
+#    results = pickle.load(fr)    
 
 #%%    
 Y_predicted_score = results['Y_test_prediction_scores']
