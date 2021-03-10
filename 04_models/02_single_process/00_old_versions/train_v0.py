@@ -184,8 +184,8 @@ def main():
     print(datetime.datetime.now(), 'Done')
 
 ### Slicing for debugging
-    model_train = model_train[0:50]
-    model_dev = model_dev[0:10]
+    #model_train = model_train[0:50]
+    #model_dev = model_dev[0:10]
 ###
 
     # Load embeddings
@@ -284,7 +284,8 @@ def main():
                     'momentum': args.momentum,
                     'seed': args.seed,
                     'seq_len': args.seq_len,
-                    'num_passages': args.num_passages,              
+                    'num_passages': args.num_passages,
+                    'num_par_arts': args.num_par_arts,
                     'embed_dim': args.embed_dim,
                     'hidden_dim': args.hidden_dim,
                     'att_dim': args.att_dim,
