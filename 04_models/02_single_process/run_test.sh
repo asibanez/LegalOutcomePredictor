@@ -3,7 +3,7 @@
 #PATH_EMBED=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\01_data\\01_preprocessed\\id_2_embed_dict.pkl
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p_par
-WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/art_06/36_art6_50p_att_v3_TEST
+WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/02_batch_02/art_06/10_art6_50p_att_v4_50ep
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
 
 python test.py \
@@ -18,6 +18,6 @@ python test.py \
     --hidden_dim=100 \
     --att_dim=100 \
     --pad_idx=0 \
-    --gpu_id=1
+    --gpu_id=0
 
 #read -p 'EOF'
