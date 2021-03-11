@@ -6,9 +6,9 @@
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p_par
 WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/02_batch_02/art_06/11_art6_50p_att_v4_50ep_TEST_DELETE
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
-PATH_MODEL=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/01_repo/04_models/02_single_process/model_attention_v4/model_attn_v4.py
+PATH_MODEL=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/01_repo/04_models/02_single_process/model_attention_v4/model_attn_v4_1.py
 
-python test.py \
+python -m pdb test.py \
     --input_dir=$INPUT_DIR \
     --work_dir=$WORK_DIR \
     --path_embed=$PATH_EMBED \

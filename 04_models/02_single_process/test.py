@@ -52,14 +52,14 @@ def test_f(args):
     Y_predicted_score = []
     Y_predicted_binary = []
     Y_ground_truth = []
+    alpha_2_list = []
+    alpha_3_list = []
 
     for X_art, X_case, Y in tqdm(test_dl, desc = 'Testing'):
         # Move to cuda
         X_art = X_art.to(device)
         X_case = X_case.to(device)
         Y = Y.to(device)
-        alpha_2_list = []
-        alpha_3_list = []
         
         # Compute predictions and append
         with torch.no_grad():
@@ -71,12 +71,15 @@ def test_f(args):
             Y_ground_truth += Y.tolist()
         
         # Append weights
+        alpha_2 = alpha_2.squeeze(2).detach().cpu()     # batch_size x num_passages
         alpha_2_list.append(alpha_2)
+        alpha_3 = alpha_3.squeeze(2).detach().cpu()     # batch_size x num_par_arts
         alpha_3_list.append(alpha_3)
     
-    alpha_2 = torch.stack(alpha_2_list, dim = 0)
-    alpha_3 = torch.stack(alpha_3_list, dim = 0)
-    weights = (alpha_2, alpha_3)
+    alpha_2 = torch.cat(alpha_2_list, dim = 0)          # dataset_size x num_passages
+    alpha_3 = torch.cat(alpha_3_list, dim = 0)          # dataset_size x num_par_arts
+    weights = {'alpha_2': alpha_2,
+               'alpha_3': alpha_3}
     
     return Y_predicted_score, Y_predicted_binary, Y_ground_truth, weights
             
@@ -127,6 +130,7 @@ def main():
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
     args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
+    args.path_attn_weights = os.path.join(args.work_dir, 'attn_weights.pkl')
     
     # Compute predictions
     Y_predicted_score, Y_predicted_binary, Y_ground_truth, weights = test_f(args)
@@ -143,7 +147,7 @@ def main():
     print(f'F1 model: {f1_model:.4f}')
     print(f'AUC model: {auc_model:.4f}\n')
         
-    # Apend results to results json file
+    # Apend metrics to results json file
     with open(args.path_results_train, 'r') as fr:
         results = json.load(fr)
     
@@ -151,8 +155,13 @@ def main():
     results['Y_test_prediction_scores'] = Y_predicted_score
     results['Y_test_prediction_binary'] = Y_predicted_binary
     
+    # Save metrics
     with open(args.path_results_full, 'w') as fw:
-        results = json.dump(results, fw)   
+        results = json.dump(results, fw)
+
+    # Save attention weights
+    with open(args.path_attn_weights, 'wb') as fw:
+        pickle.dump(weights, fw)
     
 if __name__ == "__main__":
     main()         
