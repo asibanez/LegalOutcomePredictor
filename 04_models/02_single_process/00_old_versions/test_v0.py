@@ -1,13 +1,12 @@
 # v0 -> base
-# v1 -> imports module based on config script
 
 #%% Imports
 
 import os
 import json
 import pickle
+import datetime
 import argparse
-import importlib
 import pandas as pd
 from tqdm import tqdm
 import torch
@@ -17,6 +16,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
+from model_attention_v4.model_attn_v4 import ECHR_dataset, ECHR_model
 
 # Test function
 def test_f(args):
@@ -76,9 +76,7 @@ def main():
     parser.add_argument('--work_dir', default = None, type = str, required = True,
                        help = 'work folder')
     parser.add_argument('--path_embed', default = None, type = str, required = True,
-                       help = 'path to file with embeddings')
-    parser.add_argument('--path_model', default = None, type = str, required = True,
-                       help = 'path to model')
+                       help = 'path to file with embeddings')   
     parser.add_argument('--batch_size', default = None, type = int, required = True,
                        help = 'train batch size')
     parser.add_argument('--seq_len', default = None, type = int, required = True,
@@ -99,16 +97,6 @@ def main():
                        help = 'gpu id for testing')
     args = parser.parse_args()
     args.dropout = 0.4
-    
-    # Model import          
-    module_name = os.path.splitext(os.path.basename(args.path_model))[0]
-    module_path = args.path_model
-    loader = importlib.machinery.SourceFileLoader(module_name, module_path)
-    model_module = loader.load_module()
-    global ECHR_dataset
-    ECHR_dataset = model_module.ECHR_dataset
-    global ECHR_model
-    ECHR_model = model_module.ECHR_model
     
     # Path initialization
     args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')

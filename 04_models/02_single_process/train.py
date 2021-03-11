@@ -4,17 +4,18 @@
 #%% Imports
 
 import os
+import sys
 import json
 import random
 import pickle
 import argparse
 import datetime
+import importlib
 import pandas as pd
 from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from model_attention_v4.model_attn_v4 import ECHR_dataset, ECHR_model
 
 #%% Train function
 
@@ -120,6 +121,8 @@ def main():
                        help = 'output folder')
     parser.add_argument('--path_embed', default = None, type = str, required = True,
                        help = 'path to file with embeddings')
+    parser.add_argument('--path_model', default = None, type = str, required = True,
+                       help = 'path to model')
     parser.add_argument('--n_epochs', default = None, type = int, required = True,
                        help = 'number of total epochs to run')
     parser.add_argument('--batch_size', default = None, type = int, required = True,
@@ -158,12 +161,21 @@ def main():
                         help='gpu IDs')
     args = parser.parse_args()
     
-    # Path initialization
-    # Train Dev
+    # Model import          
+    module_name = os.path.splitext(os.path.basename(args.path_model))[0]
+    module_path = args.path_model
+    loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+    model_module = loader.load_module()
+    global ECHR_dataset
+    ECHR_dataset = model_module.ECHR_dataset
+    global ECHR_model
+    ECHR_model = model_module.ECHR_model
+       
+    # Path initialization train-dev
     path_model_train = os.path.join(args.input_dir, 'model_train.pkl')
     path_model_dev = os.path.join(args.input_dir, 'model_dev.pkl')
     
-    # Output files
+    # Path initizalizatoin output files
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
         print("Created folder : ", args.output_dir)
@@ -185,8 +197,8 @@ def main():
     print(datetime.datetime.now(), 'Done')
 
 ### Slicing for debugging
-    model_train = model_train[0:50]
-    model_dev = model_dev[0:10]
+    #model_train = model_train[0:50]
+    #model_dev = model_dev[0:10]
 ###
 
     # Load embeddings
@@ -277,7 +289,10 @@ def main():
         json.dump(results, fw)
     
     # Save model parameters
-    model_params = {'n_epochs': args.n_epochs,
+    model_params = {'input_dir': args.input_dir,
+                    'path_embed': args.path_embed,
+                    'path_model': args.path_model,
+                    'n_epochs': args.n_epochs,
                     'batch_size': args.batch_size,
                     'learning_rate': args.lr,
                     'wd': args.wd,
