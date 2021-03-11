@@ -42,7 +42,8 @@ def train_epoch_f(args, epoch, model, criterion,
         optimizer.zero_grad()
         
         #Forward + backward + optimize
-        pred = model(X_art, X_case).view(-1)
+        pred, _, _ = model(X_art, X_case)
+        pred = pred.view(-1)
         loss = criterion(pred, Y)
         
         # Backpropagate

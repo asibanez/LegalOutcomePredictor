@@ -1,6 +1,5 @@
 # v0 -> base
 # v1 -> imports module based on config script
-# v2 -> includes weighs in output
 
 #%% Imports
 
@@ -58,27 +57,16 @@ def test_f(args):
         X_art = X_art.to(device)
         X_case = X_case.to(device)
         Y = Y.to(device)
-        alpha_2_list = []
-        alpha_3_list = []
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score, alpha_2, alpha_3 = model(X_art, X_case)
-            pred_batch_score = pred_batch_score.view(-1)
+            pred_batch_score = model(X_art, X_case).view(-1)
             pred_batch_binary = torch.round(pred_batch_score.view(pred_batch_score.shape[0]))
             Y_predicted_score += pred_batch_score.tolist()
             Y_predicted_binary += pred_batch_binary.tolist()
             Y_ground_truth += Y.tolist()
         
-        # Append weights
-        alpha_2_list.append(alpha_2)
-        alpha_3_list.append(alpha_3)
-    
-    alpha_2 = torch.stack(alpha_2_list, dim = 0)
-    alpha_3 = torch.stack(alpha_3_list, dim = 0)
-    weights = (alpha_2, alpha_3)
-    
-    return Y_predicted_score, Y_predicted_binary, Y_ground_truth, weights
+    return Y_predicted_score, Y_predicted_binary, Y_ground_truth
             
 def main():
     # Argument parsing
@@ -129,7 +117,7 @@ def main():
     args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
     
     # Compute predictions
-    Y_predicted_score, Y_predicted_binary, Y_ground_truth, weights = test_f(args)
+    Y_predicted_score, Y_predicted_binary, Y_ground_truth = test_f(args)
     
     # Compute and print metrics
     tn, fp, fn, tp = confusion_matrix(Y_ground_truth, Y_predicted_binary).ravel()

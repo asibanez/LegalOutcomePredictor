@@ -1,4 +1,5 @@
 # v3 -> Uses article paragraphs instead of full document
+# v4 -> Uses two-way co-attention
 
 #%% Imports
 
@@ -114,9 +115,9 @@ class ECHR_model(nn.Module):
         # Article paragraph encoding - attention step 1
         projection = torch.tanh(self.fc_proj_art_par_1(x_art_par))         # batch_size x n_pars x att_dim
         query_att_art_par = torch.transpose(self.query_att_art_par, 0, 1)  # att_dim x 1
-        alpha = torch.matmul(projection, query_att_art_par)                # batch_size x n_pars x 1
-        alpha = torch.softmax(alpha, dim = 1)                              # batch_size x n_pars x 1
-        att_output = x_art_par * alpha                                     # batch_size x n_pars x (hidden_dim x 2)
+        alpha_1 = torch.matmul(projection, query_att_art_par)              # batch_size x n_pars x 1
+        alpha_1 = torch.softmax(alpha_1, dim = 1)                          # batch_size x n_pars x 1
+        att_output = x_art_par * alpha_1                                   # batch_size x n_pars x (hidden_dim x 2)
         query_1 = torch.sum(att_output, axis = 1).unsqueeze(1)             # batch_size x 1 x (hidden_dim x 2)            
               
         # Case sentence encoding
@@ -138,17 +139,17 @@ class ECHR_model(nn.Module):
         # Case document encoding - attention
         projection = torch.tanh(self.fc_proj_case_pass(x_case_pass))       # batch_size x n_passages x att_dim
         query_1 = torch.transpose(query_1, 1, 2)                           # batch_size x (hidden_dim x 2) x 1
-        alpha = torch.bmm(projection, query_1)                             # batch_size x n_passages x 1
-        alpha = torch.softmax(alpha, dim = 1)                              # batch_size x n_passages x 1
-        att_output = x_case_pass * alpha                                   # batch_size x n_passages x (hidden_dim x 2)
+        alpha_2 = torch.bmm(projection, query_1)                           # batch_size x n_passages x 1
+        alpha_2 = torch.softmax(alpha_2, dim = 1)                          # batch_size x n_passages x 1
+        att_output = x_case_pass * alpha_2                                 # batch_size x n_passages x (hidden_dim x 2)
         query_2 = torch.sum(att_output, axis = 1).unsqueeze(1)             # batch_size x 1 x (hidden_dim x 2)
         
         # Article paragraph encoding - attention step 2
         projection = torch.tanh(self.fc_proj_art_par_2(x_art_par))         # batch_size x n_pars x att_dim
         query_2 = torch.transpose(query_2, 1, 2)                           # batch_size x (hidden_dim x 2) x 1
-        alpha = torch.bmm(projection, query_2)                             # batch_size x n_pars x 1
-        alpha = torch.softmax(alpha, dim = 1)                              # batch_size x n_pars x 1
-        att_output = x_art_par * alpha                                     # batch_size x n_pars x (hidden_dim x 2)
+        alpha_3 = torch.bmm(projection, query_2)                           # batch_size x n_pars x 1
+        alpha_3 = torch.softmax(alpha_3, dim = 1)                          # batch_size x n_pars x 1
+        att_output = x_art_par * alpha_3                                   # batch_size x n_pars x (hidden_dim x 2)
         att_output = torch.sum(att_output, axis = 1).unsqueeze(1)          # batch_size x 1 x (hidden_dim x 2)            
         
         # Fully conected output
@@ -157,4 +158,4 @@ class ECHR_model(nn.Module):
         # Sigmoid function
         x = self.sigmoid(x)                                                # batch size x output_size
         
-        return x
+        return x, alpha_2, alpha_3
