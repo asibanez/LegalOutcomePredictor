@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 #%% Path definition
 
-input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/13_Legal_Outcome_Predictor/00_data/01_preprocessed'
+input_folder = 'C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\01_preprocessed'
 
 ECHR_dict_path = os.path.join(input_folder, 'ECHR_dict.pkl')
 case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
@@ -37,7 +37,7 @@ print('shape case test = ', case_test_df.shape)
 case_all_df = pd.concat([case_train_df, case_dev_df, case_test_df], axis = 0)
 print('shape case all = ', case_all_df.shape)
 
-#%% Compute num tokens and num passages per caseEDA cases
+#%% Compute num tokens and num passages per case
 
 num_cases = len(case_all_df)
 cases_passages = case_all_df.TEXT.to_list()
@@ -82,7 +82,7 @@ plt.xlim(0, 30000)
 plt.ylabel('freq')
 plt.show()
 
-#%% Compute distribution of broken articles
+#%% Compute distribution of violated articles
    
 violated_art_train = [x for sublist in list(case_train_df.VIOLATED_ARTICLES) for x in sublist]
 violated_art_train = [x for x in violated_art_train if 'P' not in x]
@@ -99,7 +99,7 @@ violated_art_test = [x for x in violated_art_test if 'P' not in x]
 violated_art_test_count = pd.value_counts(violated_art_test)
 violated_art_test_int = [int(x) for x in violated_art_test]
 
-#%% Plot count of broken articles
+#%% Plot count of violated articles
 
 plt.plot(violated_art_train_count, label = 'train')
 plt.plot(violated_art_dev_count, label = 'dev')
