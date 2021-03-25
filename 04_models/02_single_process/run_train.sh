@@ -4,17 +4,17 @@
 #PATH_MODEL=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\01_repo\\04_models\\02_single_process\\model_attention_v4\\model_attn_v4.py
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split/art_06_50p_par
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/02_batch_02/art_06/12_TEST_DELETE
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/02_batch_02/art_06/11_art6_50p_att_v4_2_50ep
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
-PATH_MODEL=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/01_repo/04_models/02_single_process/model_attention_v4/model_attn_v4.py
+PATH_MODEL=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/01_repo/04_models/02_single_process/model_attention_v4/model_attn_v4_2.py
 
 python train.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
     --path_embed=$PATH_EMBED \
     --path_model=$PATH_MODEL \
-    --n_epochs=2\
-    --batch_size=500 \
+    --n_epochs=50 \
+    --batch_size=230 \
     --lr=1e-4 \
     --wd=1e-6 \
     --dropout=0.4 \
@@ -30,7 +30,7 @@ python train.py \
     --save_final_model=True \
     --save_model_steps=False \
     --use_cuda=True \
-    --gpu_ids=5,6,7
+    --gpu_ids=0,1,2,3
 
 #read -p 'EOF'
 

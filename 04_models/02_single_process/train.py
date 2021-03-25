@@ -94,7 +94,8 @@ def val_epoch_f(model, criterion, dev_dl, device):
                     
         # Compute predictions:
         with torch.no_grad():
-            pred = model(X_art, X_case).view(-1)
+            pred, _, _ = model(X_art, X_case)
+            pred = pred.view(-1)
             loss = criterion(pred, Y)
         
         # Book-keeping
