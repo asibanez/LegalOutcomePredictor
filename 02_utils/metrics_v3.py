@@ -26,7 +26,7 @@ def compute_metrics(Y_ground_truth, Y_predicted_binary, Y_predicted_score):
 
 #%% Path definitions
 
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/02_runs/batch_02/art_06/10_art6_50p_att_v4_50ep'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/02_runs/batch_02/art_06/11_art6_50p_att_v4_2_50ep'
 
 #%% Global initialization
 
