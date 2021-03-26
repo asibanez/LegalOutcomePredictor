@@ -149,11 +149,11 @@ def dataset_preproc_f(dataset_df, ECHR_art_df, ECHR_par_df, selected_arts,
 
 #%% Path definition
 
-input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
-output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
+#input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
+#output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
 
-#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
-#output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
+output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
 
 output_folder =  os.path.join(output_base_folder, 'art_06_50p_par_att')
 output_path_train = os.path.join(output_folder, 'model_train.pkl')
