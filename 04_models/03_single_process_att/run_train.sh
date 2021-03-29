@@ -8,13 +8,13 @@ OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/02_runs/02_bat
 PATH_EMBED=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/id_2_embed_dict.pkl
 PATH_MODEL=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/01_repo/04_models/03_single_process_att/model_attention_v4/model_attn_v4_3.py
 
-python -m ipdb train.py \
+python train.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
     --path_embed=$PATH_EMBED \
     --path_model=$PATH_MODEL \
     --n_epochs=50 \
-    --batch_size=200 \
+    --batch_size=180 \
     --lr=1e-4 \
     --wd=1e-6 \
     --dropout=0.4 \
