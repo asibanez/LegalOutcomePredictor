@@ -128,13 +128,13 @@ def dataset_preproc_f(dataset_df, ECHR_art_df, ECHR_par_df, selected_arts,
                     outcome_list[idx] = 1
  
         # Iterate over violated paragraph list        
-        violated_art_pars = [0] * max_num_pars
+        violated_art_pars_list = [[0 for x in range(max_num_pars)] for y in range(len(selected_arts))]
         for par in violated_pars:
-            par_article = par.split('-')[0]
-            par_id =  par.split('-')[1]
-            if par_article == article:
-                violated_art_pars[int(par_id)-1] = 1
-        violated_art_pars_list = [violated_art_pars] * len(selected_arts)
+            for idx, article in enumerate(selected_arts):
+                par_article = par.split('-')[0]
+                par_id =  par.split('-')[1]
+                if par_article == article:
+                    violated_art_pars_list[idx][int(par_id)-1] = 1
                 
         aux_df = pd.DataFrame({'case_id': case_id_list,
                                'article_id': selected_arts,
@@ -149,13 +149,13 @@ def dataset_preproc_f(dataset_df, ECHR_art_df, ECHR_par_df, selected_arts,
 
 #%% Path definition
 
-#input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
-#output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
+input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
+output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
 
-input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
-output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
+#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
+#output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
 
-output_folder =  os.path.join(output_base_folder, 'art_03_05_06_13_50p_par_att')
+output_folder =  os.path.join(output_base_folder, 'art_03_05_06_13_50p_par_att_TEST')
 output_path_train = os.path.join(output_folder, 'model_train.pkl')
 output_path_dev = os.path.join(output_folder, 'model_dev.pkl')
 output_path_test = os.path.join(output_folder, 'model_test.pkl')
