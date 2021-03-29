@@ -55,7 +55,7 @@ def test_f(args):
     alpha_2_list = []
     alpha_3_list = []
 
-    for X_art, X_case, Y in tqdm(test_dl, desc = 'Testing'):
+    for X_art, X_case, _, Y in tqdm(test_dl, desc = 'Testing'):
         # Move to cuda
         X_art = X_art.to(device)
         X_case = X_case.to(device)

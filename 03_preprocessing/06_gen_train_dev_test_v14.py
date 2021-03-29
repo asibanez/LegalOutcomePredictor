@@ -149,13 +149,13 @@ def dataset_preproc_f(dataset_df, ECHR_art_df, ECHR_par_df, selected_arts,
 
 #%% Path definition
 
-input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
-output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
+#input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
+#output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
 
-#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
-#output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
+output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
 
-output_folder =  os.path.join(output_base_folder, 'art_06_50p_par_att')
+output_folder =  os.path.join(output_base_folder, 'art_03_05_06_13_50p_par_att')
 output_path_train = os.path.join(output_folder, 'model_train.pkl')
 output_path_dev = os.path.join(output_folder, 'model_dev.pkl')
 output_path_test = os.path.join(output_folder, 'model_test.pkl')
@@ -174,7 +174,7 @@ if not os.path.isdir(output_folder):
 
 num_passages_per_case = 50 # Number of case paragraphs to be fed to the model
 par_selection_method = 'none' # Either 'bm25', 'random' or 'none'
-selected_arts = ['6'] #[x for x in range(1, 67)] #[10] #[4, 5, 6, 7]
+selected_arts = ['3', '5', '6', '13'] #[x for x in range(1, 67)] #[10] #[4, 5, 6, 7]
 pad_token_id = 0
 seq_len = 512
 max_num_pars = 11
