@@ -6,7 +6,7 @@ import pickle
 
 #%% Path definition
 
-path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split/art_06_50p_par_att/model_train.pkl'
+path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split/art_03_05_06_13_50p_par_att/model_train.pkl'
 path_tok_2_id = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/tok_2_id_dict.pkl'
 
 #%% Data loading
@@ -19,7 +19,7 @@ with open(path_tok_2_id, 'rb') as fr:
 
 #%% Global initialization
 
-pos = 10259
+pos = 12
 n_case_texts = 50
 n_art_pars = 11
 seq_len = 512
@@ -39,6 +39,17 @@ ECHR_art_id = data.iloc[pos]['article_id']
 art_pars_ids = data.iloc[pos]['article_pars_ids']
 case_texts_ids = data.iloc[pos]['case_texts_ids']
 violated_pars_ids = data.iloc[pos]['violated_pars']
+outcome = data.iloc[pos]['outcome']
+
+#%% Add sum violated article paragraphs to dataframe
+#sum_viol_pars = [sum(x) for x in data.violated_pars]
+
+sum_viol_pars = []
+for x in data.violated_pars:
+    aux = sum(x)
+    sum_viol_pars.append(aux)
+
+data['sum_violated_pars'] = sum_viol_pars
 
 #%% Convert ids to tokens
 art_pars_tok = [id_2_tok[x] for x in art_pars_ids]
@@ -62,7 +73,9 @@ for idx in range(0, n_case_texts):
     
 #%% Print example
 
-print(f'CASE ID: {case_id}\n')
+print(f'\nCASE ID: {case_id}')
 print(f'ECHR art id: {ECHR_art_id}')
-_ = [print(f'ART_PARAGRAPH {idx}\n{text}\n') for idx, text in enumerate(art_pars_strings)]
-_ = [print(f'CASE_TEXT {idx}\n{text}\n') for idx, text in enumerate(case_strings)]
+print(f'outcome: {outcome}')
+print(f'violated ECHR pars: {violated_pars_ids}')
+_ = [print(f'Art Paragraph {idx}\n{text}\n') for idx, text in enumerate(art_pars_strings)]
+_ = [print(f'Case_Text {idx}\n{text}\n') for idx, text in enumerate(case_strings)]

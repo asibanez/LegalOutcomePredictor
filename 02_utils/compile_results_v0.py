@@ -1,3 +1,5 @@
+# Computes stats for test results
+
 #%% Imports
 import json
 import pickle
