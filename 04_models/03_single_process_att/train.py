@@ -89,20 +89,25 @@ def val_epoch_f(model, criterion_1, criterion_2, dev_dl, device):
     sum_val_loss = 0
     total_entries = 0
 
-    for X_art, X_case, _, Y in tqdm(dev_dl, desc = 'Validation'):
+    for X_art, X_case, X_viol_pars, Y in tqdm(dev_dl, desc = 'Validation'):
         
         # Move to cuda
         if next(model.parameters()).is_cuda:
             X_art = X_art.to(device)
             X_case = X_case.to(device)
+            X_viol_pars = X_viol_pars.to(device)
             Y = Y.to(device)
                     
         # Compute predictions:
         with torch.no_grad():
-            pred, _, _ = model(X_art, X_case)
+            pred, _, masked_alpha_3 = model(X_art, X_case)
             pred = pred.view(-1)
-            loss = criterion_1(pred, Y)
-        
+            masked_alpha_3 = masked_alpha_3.squeeze(2)
+            X_viol_pars = torch.log_softmax(X_viol_pars, dim = 1)
+            loss_1 = criterion_1(pred, Y)
+            loss_2 = criterion_2(X_viol_pars, masked_alpha_3)
+            loss = loss_1 + loss_2 * 0.2
+
         # Book-keeping
         current_batch_size = X_art.size()[0]
         total_entries += current_batch_size
