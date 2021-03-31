@@ -3,10 +3,11 @@
 #%% Imports
 
 import pickle
+import pandas as pd
 
 #%% Path definition
 
-path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split/art_03_05_06_13_50p_par_att/model_train.pkl'
+path_data = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split/art_03_05_06_13_50p_par_att/model_test.pkl'
 path_tok_2_id = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/tok_2_id_dict.pkl'
 
 #%% Data loading
