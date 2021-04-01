@@ -122,9 +122,13 @@ def dataset_preproc_f(dataset_df, article_list, num_passages_per_case, seq_len,
 
 #%% Path definition
 
-base_folder = os.path.split(os.getcwd())[0]
-input_folder = os.path.join(base_folder, '01_data', '01_preprocessed')
-output_folder =  os.path.join(base_folder, '01_data', '02_runs', '03_art_03/00_input_data')
+input_folder = 'C://Users//siban//Dropbox//CSAIL//Projects//12_Legal_Outcome_Predictor//00_data//01_preprocessed'
+output_base_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/01_preprocessed/01_article_split'
+
+#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed'
+#output_base_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/01_preprocessed/01_article_split'
+
+output_folder =  os.path.join(output_base_folder, 'art_03_05_06_13_50p_par_att_TEST')
 output_path_train = os.path.join(output_folder, 'model_train.pkl')
 output_path_dev = os.path.join(output_folder, 'model_dev.pkl')
 output_path_test = os.path.join(output_folder, 'model_test.pkl')
@@ -134,6 +138,10 @@ case_train_path = os.path.join(input_folder, 'case_EN_train_df.pkl')
 case_dev_path = os.path.join(input_folder, 'case_EN_dev_df.pkl')
 case_test_path = os.path.join(input_folder, 'case_EN_test_df.pkl')
 tok_2_id_path = os.path.join(input_folder, 'tok_2_id_dict.pkl')
+
+if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
+        print("Created folder : ", output_folder)
 
 #%% Global initialization
 
