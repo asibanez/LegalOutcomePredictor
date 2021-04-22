@@ -11,8 +11,8 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 
 #%% Path definition
-#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/03_toy_3'
-output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
+output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_full'
+#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
 train_set_path = os.path.join(output_folder, 'model_train.pkl')
 val_set_path = os.path.join(output_folder, 'model_dev.pkl')
 test_set_path = os.path.join(output_folder, 'model_test.pkl')
@@ -39,24 +39,23 @@ id_2_label = {0: '2',
               13:'15',
               14:'17',
               15:'18',
-              16:'19',
-              17:'34',
-              18:'38',
-              19:'39',
-              20:'46',              
-              21:'P1-1',
-              22:'P1-2',
-              23:'P1-3',
-              24:'P3-1',
-              25:'P4-2',
-              26:'P4-4',
-              27:'P6-3',
-              28:'P7-1',
-              29:'P7-2',
-              30:'P7-3',
-              31:'P7-4',
-              32:'P7-5',
-              33:'P12-1'}
+              16:'34',
+              17:'38',
+              18:'39',
+              19:'46',              
+              20:'P1-1',
+              21:'P1-2',
+              22:'P1-3',
+              23:'P3-1',
+              24:'P4-2',
+              25:'P4-4',
+              26:'P6-3',
+              27:'P7-1',
+              28:'P7-2',
+              29:'P7-3',
+              30:'P7-4',
+              31:'P7-5',
+              32:'P12-1'}
 
 #%% Label dict
 label_2_id = {id_2_label[x]:x for x in id_2_label.keys()}
