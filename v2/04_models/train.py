@@ -31,7 +31,7 @@ def train_epoch_f(args, epoch, model, criterion,
         # Move data to cuda
         if next(model.parameters()).is_cuda:
             X_facts_ids = X_facts_ids.to(device)
-            X_facts_token_types = X_facts_token_types.to(device)
+            #X_facts_token_types = X_facts_token_types.to(device)
             X_facts_attn_masks = X_facts_attn_masks.to(device)
             Y_labels = Y_labels.to(device)
         
@@ -267,8 +267,6 @@ def main():
     
     # Save model parameters
     model_params = {'input_dir': args.input_dir,
-                    'path_embed': args.path_embed,
-                    'path_model': args.path_model,
                     'n_epochs': args.n_epochs,
                     'batch_size': args.batch_size,
                     'learning_rate': args.lr,
@@ -277,10 +275,9 @@ def main():
                     'momentum': args.momentum,
                     'seed': args.seed,
                     'seq_len': args.seq_len,
-                    'num_passages': args.num_passages,              
-                    'embed_dim': args.embed_dim,
+                    'num_labels': args.num_labels,              
                     'hidden_dim': args.hidden_dim,
-                    'att_dim': args.att_dim,
+                    'max_n_pars': args.max_n_pars,
                     'pad_idx': args.pad_idx,
                     'save_final_model': args.save_final_model,
                     'save_model_steps': args.save_model_steps,

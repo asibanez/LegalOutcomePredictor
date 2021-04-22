@@ -45,6 +45,9 @@ class ECHR2_model(nn.Module):
         # Bert model
         self.model_name = 'nlpaueb/legal-bert-small-uncased'
         self.bert_model = AutoModel.from_pretrained(self.model_name)
+        # Freeze bert parameters
+        for parameter in self.bert_model.parameters():
+            parameter.requires_grad = False
         
         # Transformer layer
         self.transf_enc = nn.TransformerEncoderLayer(d_model = self.h_dim,
@@ -65,14 +68,18 @@ class ECHR2_model(nn.Module):
             
     def forward(self, X_facts_ids, X_facts_token_types, X_facts_attn_masks):
         batch_size = X_facts_ids.size()[0]
+        device = X_facts_ids.get_device()
         
         # Encode paragraphs - BERT & generate transfomers masks
         bert_out = {}
         transf_mask = torch.zeros((batch_size,
                                    self.max_n_pars), dtype=torch.bool)  # batch_size x max_n_pars
         
-        for idx in tqdm(range(0, self.max_n_pars),
-                        desc = 'Iterating through paragraphs'):
+#        for idx in tqdm(range(0, self.max_n_pars),
+#                        desc = 'Iterating through paragraphs'):
+
+        for idx in range(0, self.max_n_pars):
+#            print(idx)
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             
@@ -88,7 +95,7 @@ class ECHR2_model(nn.Module):
             
             # Generate input dict to bert model
             bert_input = {'input_ids': facts_ids,
-                          'token_type_ids': facts_token_types,
+            #              'token_type_ids': facts_token_types,
                           'attention_mask': facts_attn_masks}
                   
             # Compute 
@@ -98,6 +105,7 @@ class ECHR2_model(nn.Module):
         x = torch.cat(list(bert_out.values()), dim=1)                   # batch_size x max_n_pars x h_dim
         
         # Encode document - Transformer
+        transf_mask = transf_mask.to(device)
         x = x.transpose(0, 1)                                           # max_n_pars x batch_size x h_dim
         x = self.transf_enc(x,src_key_padding_mask = transf_mask)       # max_n_pars x batch_size x h_dim
         x = x.transpose(0, 1)                                           # batch_size x max_n_pars x h_dim
