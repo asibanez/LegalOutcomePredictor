@@ -11,7 +11,8 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 
 #%% Path definition
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/03_toy_3'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/03_toy_3'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
 train_set_path = os.path.join(output_folder, 'model_train.pkl')
 val_set_path = os.path.join(output_folder, 'model_dev.pkl')
 test_set_path = os.path.join(output_folder, 'model_test.pkl')
@@ -61,9 +62,9 @@ id_2_label = {0: '2',
 label_2_id = {id_2_label[x]:x for x in id_2_label.keys()}
 
 #%% Data load
-train_set = load_dataset('ecthr_cases', split = 'train')[0:100]
-val_set = load_dataset('ecthr_cases', split = 'validation')[0:100]
-test_set = load_dataset('ecthr_cases', split = 'test')[0:100]
+train_set = load_dataset('ecthr_cases', split = 'train')        #[0:100]
+val_set = load_dataset('ecthr_cases', split = 'validation')     #[0:100]
+test_set = load_dataset('ecthr_cases', split = 'test')          #[0:100]
 
 train_facts = train_set['facts']
 val_facts = val_set['facts']
