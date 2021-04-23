@@ -79,7 +79,6 @@ class ECHR2_model(nn.Module):
 #                        desc = 'Iterating through paragraphs'):
 
         for idx in range(0, self.max_n_pars):
-#            print(idx)
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             
@@ -94,9 +93,9 @@ class ECHR2_model(nn.Module):
             transf_mask[:, idx] = mask_aux.view(1,-1)                   # 1 x batch_size
             
             # Generate input dict to bert model
-            bert_input = {'input_ids': facts_ids,
-            #              'token_type_ids': facts_token_types,
-                          'attention_mask': facts_attn_masks}
+            bert_input = {'input_ids': facts_ids.long(),
+            #              'token_type_ids': facts_token_types.long(),
+                          'attention_mask': facts_attn_masks.long()}
                   
             # Compute 
             output = self.bert_model(**bert_input, output_hidden_states = True)
@@ -106,9 +105,9 @@ class ECHR2_model(nn.Module):
         
         # Encode document - Transformer
         transf_mask = transf_mask.to(device)
-        x = x.transpose(0, 1)                                           # max_n_pars x batch_size x h_dim
+        x = x.transpose(0,1)                                            # max_n_pars x batch_size x h_dim
         x = self.transf_enc(x,src_key_padding_mask = transf_mask)       # max_n_pars x batch_size x h_dim
-        x = x.transpose(0, 1)                                           # batch_size x max_n_pars x h_dim
+        x = x.transpose(0,1)                                            # batch_size x max_n_pars x h_dim
         
         # Max pooling over paragraphs
         x = x.transpose(1,2)                                            # batch_size x h_dim x max_n_pars
