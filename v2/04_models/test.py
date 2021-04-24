@@ -10,11 +10,9 @@ import argparse
 import pandas as pd
 from tqdm import tqdm
 import torch
-####
-#import torch.nn as nn
-####
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 from sklearn.metrics import roc_auc_score
 from model_v4 import ECHR2_dataset, ECHR2_model
 
@@ -59,11 +57,15 @@ def test_f(args):
         # Compute predictions and append
         with torch.no_grad():
             pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
-            pred_batch_score = pred_batch_score.view(-1)
-            pred_batch_binary = torch.round(pred_batch_score.view(pred_batch_score.shape[0]))
-            Y_predicted_score += pred_batch_score.tolist()
-            Y_predicted_binary += pred_batch_binary.tolist()
-            Y_ground_truth += Y_labels.tolist()
+
+        pred_batch_binary = torch.round(pred_batch_score)
+        Y_predicted_score.append(pred_batch_score)
+        Y_predicted_binary.append(pred_batch_binary)
+        Y_ground_truth.append(Y_labels)
+
+    Y_predicted_score = torch.cat(Y_predicted_score, dim = 0).cpu()
+    Y_predicted_binary = torch.cat(Y_predicted_binary, dim = 0).cpu()
+    Y_ground_truth = torch.cat(Y_ground_truth, dim = 0).cpu()
             
     return Y_predicted_score, Y_predicted_binary, Y_ground_truth
             
@@ -80,7 +82,7 @@ def main():
                        help = 'text sequence length')
     parser.add_argument('--num_labels', default = None, type = int, required = True,
                        help = 'number of labels')
-    parser.add_argument('--n_heads)', default = None, type = int, required = True,
+    parser.add_argument('--n_heads', default = None, type = int, required = True,
                        help = 'number of heads in transformer model')
     parser.add_argument('--hidden_dim', default = None, type = int, required = True,
                        help = 'lstm hidden dimension')
@@ -91,6 +93,7 @@ def main():
     parser.add_argument('--gpu_id', default = None, type = int, required = True,
                        help = 'gpu id for testing')
     args = parser.parse_args()
+    args.dropout = 0.4
     
     # Path initialization
     args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
@@ -102,24 +105,15 @@ def main():
     Y_predicted_score, Y_predicted_binary, Y_ground_truth = test_f(args)
     
     # Compute and print metrics
-    tn, fp, fn, tp = confusion_matrix(Y_ground_truth, Y_predicted_binary).ravel()
-    precision_model = tp / (tp + fp)
-    recall_model = tp / (tp + fn)
-    f1_model = 2 * (precision_model * recall_model) / (precision_model + recall_model)
-    auc_model = roc_auc_score(Y_ground_truth, Y_predicted_score)
-
-    print(f'\nPrecision model: {precision_model:.4f}')
-    print(f'Recall model: {recall_model:.4f}')
-    print(f'F1 model: {f1_model:.4f}')
-    print(f'AUC model: {auc_model:.4f}\n')
-        
+    print(classification_report(Y_ground_truth, Y_predicted_binary))
+       
     # Apend metrics to results json file
     with open(args.path_results_train, 'r') as fr:
         results = json.load(fr)
     
-    results['Y_test_ground_truth'] = Y_ground_truth
-    results['Y_test_prediction_scores'] = Y_predicted_score
-    results['Y_test_prediction_binary'] = Y_predicted_binary
+    results['Y_test_ground_truth'] = Y_ground_truth.numpy()
+    results['Y_test_prediction_scores'] = Y_predicted_score.numpy()
+    results['Y_test_prediction_binary'] = Y_predicted_binary.numpy()
     
     # Save metrics
     with open(args.path_results_full, 'w') as fw:
