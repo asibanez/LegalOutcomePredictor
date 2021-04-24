@@ -11,8 +11,8 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 
 #%% Path definition
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_full'
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_full'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
 train_set_path = os.path.join(output_folder, 'model_train.pkl')
 val_set_path = os.path.join(output_folder, 'model_dev.pkl')
 test_set_path = os.path.join(output_folder, 'model_test.pkl')
@@ -61,9 +61,9 @@ id_2_label = {0: '2',
 label_2_id = {id_2_label[x]:x for x in id_2_label.keys()}
 
 #%% Data load
-train_set = load_dataset('ecthr_cases', split = 'train')        #[0:100]
-val_set = load_dataset('ecthr_cases', split = 'validation')     #[0:100]
-test_set = load_dataset('ecthr_cases', split = 'test')          #[0:100]
+train_set = load_dataset('ecthr_cases', split = 'train')    #[0:100]
+val_set = load_dataset('ecthr_cases', split = 'validation') #[0:100]
+test_set = load_dataset('ecthr_cases', split = 'test')      #[0:100]
 
 train_facts = train_set['facts']
 val_facts = val_set['facts']
@@ -83,11 +83,11 @@ train_facts_input_id_list = []
 train_facts_token_type_id_list = []
 train_attention_mask_list = []
 
-for fact_set in tqdm(train_facts, desc = 'tokenizing train set'):
+for idx, fact_set in enumerate(tqdm(train_facts, desc = 'tokenizing train set')):
     aux_input_id_list = []
     aux_token_type_id_list = []
     aux_attention_mask_list = []
-    for fact in fact_set:
+    for fact in fact_set[0:max_n_pars]:
         fact_tokens = bert_tokenizer(fact,
                                      return_tensors = 'pt',
                                      padding = 'max_length',
@@ -120,7 +120,7 @@ for fact_set in tqdm(val_facts, desc = 'tokenizing validation set'):
     aux_input_id_list = []
     aux_token_type_id_list = []
     aux_attention_mask_list = []
-    for fact in fact_set:
+    for fact in fact_set[0:max_n_pars]:
         fact_tokens = bert_tokenizer(fact,
                                      return_tensors = 'pt',
                                      padding = 'max_length',
@@ -153,7 +153,7 @@ for fact_set in tqdm(test_facts, desc = 'tokenizing test set'):
     aux_input_id_list = []
     aux_token_type_id_list = []
     aux_attention_mask_list = []
-    for fact in fact_set:
+    for fact in fact_set[0:max_n_pars]:
         fact_tokens = bert_tokenizer(fact,
                                      return_tensors = 'pt',
                                      padding = 'max_length',
