@@ -4,6 +4,7 @@
 # v4 -> Tokenizer outputs converted to long tensors
 # v5 -> Empty paragraphs as per BERT tokenizer & tokenization and 
 #       label processing moved to functions
+#       Creates output folder if not exists
 
 #%% Imports
 import os
@@ -32,7 +33,7 @@ def tokenize_f(facts):
     empty_fact_token_type_id = empty_fact_tokens['token_type_ids'].squeeze(0).type(torch.LongTensor)
     empty_fact_attn_mask = empty_fact_tokens['attention_mask'].squeeze(0).type(torch.LongTensor)
     
-    for idx, fact_set in enumerate(tqdm(train_facts, desc = 'Tokenizing dataset')):
+    for idx, fact_set in enumerate(tqdm(facts, desc = 'Tokenizing dataset')):
         aux_input_id_list = []
         aux_token_type_id_list = []
         aux_attention_mask_list = []
@@ -78,8 +79,8 @@ def label_process_f(labels):
     return labels_processed
 
 #%% Path definition
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/04_toy_4'
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/00_full'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/04_toy_4'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
 train_set_path = os.path.join(output_folder, 'model_train.pkl')
 val_set_path = os.path.join(output_folder, 'model_dev.pkl')
 test_set_path = os.path.join(output_folder, 'model_test.pkl')
@@ -128,9 +129,9 @@ id_2_label = {0: '2',
 label_2_id = {id_2_label[x]:x for x in id_2_label.keys()}
 
 #%% Data load
-train_set = load_dataset('ecthr_cases', split = 'train')[0:100]
-val_set = load_dataset('ecthr_cases', split = 'validation')[0:100]
-test_set = load_dataset('ecthr_cases', split = 'test')[0:100]
+train_set = load_dataset('ecthr_cases', split = 'train')        #[0:100]
+val_set = load_dataset('ecthr_cases', split = 'validation')     #[0:100]
+test_set = load_dataset('ecthr_cases', split = 'test')          #[0:100]
 
 train_facts = train_set['facts']
 val_facts = val_set['facts']
@@ -174,7 +175,12 @@ test_set_df = pd.DataFrame({'facts_ids': test_input_ids,
                             'labels': test_labels_processed})
 
 #%% Save outputs
+if not os.path.isdir(output_folder):
+    os.makedirs(output_folder)
+    print("Created folder : ", output_folder)
+
+print(f'Saving datasets to {output_folder}')
 train_set_df.to_pickle(train_set_path)
 val_set_df.to_pickle(val_set_path)
 test_set_df.to_pickle(test_set_path)
-print(f'Results saved to {output_folder}')
+print('Done')
