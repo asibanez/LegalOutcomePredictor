@@ -166,7 +166,7 @@ def main():
     path_model_train = os.path.join(args.input_dir, 'model_train.pkl')
     path_model_dev = os.path.join(args.input_dir, 'model_dev.pkl')
     
-    # Path initizalizatoin output files
+    # Path initialization output files
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
         print("Created folder : ", args.output_dir)
@@ -181,8 +181,10 @@ def main():
     _ = torch.manual_seed(args.seed)
 
     # Train dev test sets load
+    print('Loading data')
     model_train = pd.read_pickle(path_model_train)
     model_dev = pd.read_pickle(path_model_dev)
+    print('Done')
    
     # Instantiate dataclasses
     train_dataset = ECHR2_dataset(model_train)
@@ -190,7 +192,7 @@ def main():
 
     # Instantiate dataloaders
     train_dl = DataLoader(train_dataset, batch_size = args.batch_size,
-                          shuffle = False, drop_last = True)
+                          shuffle = False, drop_last = False)
     dev_dl = DataLoader(dev_dataset, batch_size = args.batch_size * 2,
                         shuffle = False)
 

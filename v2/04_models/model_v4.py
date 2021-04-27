@@ -75,10 +75,10 @@ class ECHR2_model(nn.Module):
         transf_mask = torch.zeros((batch_size,
                                    self.max_n_pars), dtype=torch.bool)  # batch_size x max_n_pars
         
-#        for idx in tqdm(range(0, self.max_n_pars),
-#                        desc = 'Iterating through paragraphs'):
+        for idx in tqdm(range(0, self.max_n_pars),
+                        desc = 'Iterating through paragraphs'):
 
-        for idx in range(0, self.max_n_pars):
+#        for idx in range(0, self.max_n_pars):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             
