@@ -4,7 +4,6 @@
 # v4  -> Converts to multilabel classification task and computes metrics
 
 #%% Imports
-
 import os
 import json
 import pickle
@@ -15,7 +14,6 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_auc_score, roc_curve, classification_report
 
 #%% Function definition
-
 def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     tn, fp, fn, tp = confusion_matrix(Y_ground_truth, Y_pred_binary).ravel()
     precision = tp / (tp + fp)
@@ -26,62 +24,93 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/02_runs/batch_02/art_03_05_06_13/'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/01_TEST_BERT_TRANSF/'
 
 #%% Global initialization
-
 random.seed(1234)
 threshold = 0.5
-arts_considered = [3, 5, 6, 13]
+tgt_labels = ['2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              '10',
+              '11',
+              '12',
+              '13',
+              '14',
+              '15',
+              '17',
+              '18',
+              '34',
+              '38',
+              '39',
+              '46',              
+              'P1-1',
+              'P1-2',
+              'P1-3',
+              'P3-1',
+              'P4-2',
+              'P4-4',
+              'P6-3',
+              'P7-1',
+              'P7-2',
+              'P7-3',
+              'P7-4',
+              'P7-5',
+              'P12-1']
 
 #%% Read data json
-
-input_path = os.path.join(base_path, 'full_results.json')
+input_path = os.path.join(base_path, 'full_results_dev.json')
 with open(input_path) as fr:
     results = json.load(fr)
 
 #%% Extract results
 Y_pred_score = results['Y_test_prediction_scores']
-Y_pred_binary = [1 if x >= threshold else 0 for x in Y_pred_score]
-Y_ground_truth = [int(x) for x in results['Y_test_ground_truth']]
+Y_ground_truth = results['Y_test_ground_truth']
+Y_pred_binary = [[1 if x >= threshold else 0 for x in sublist] for sublist in Y_pred_score]
+Y_ground_truth = [[int(x) for x in sublist] for sublist in Y_ground_truth]
 
-#%% Convert to multilabel
+#%% Print results    
 
-label_names = ['art_' + str(x) for x in arts_considered]
-num_labels = len(arts_considered)
-num_examples = len(Y_pred_score)
-assert num_examples % num_labels == 0
+print(classification_report(Y_ground_truth, Y_pred_binary,
+      target_names = tgt_labels))
 
-Y_pred_score_multi = []
-Y_ground_truth_multi = []
-Y_pred_binary_multi = []
 
-for idx in range(int(num_examples / num_labels)):
-    beg = idx*num_labels
-    end = (idx + 1)*num_labels
-    Y_pred_score_aux = Y_pred_score[beg:end]
-    Y_pred_binary_aux = Y_pred_binary[beg:end]
-    Y_ground_truth_aux = Y_ground_truth[beg:end]
-    
-    Y_pred_score_multi.append(Y_pred_score_aux)
-    Y_pred_binary_multi.append(Y_pred_binary_aux)
-    Y_ground_truth_multi.append(Y_ground_truth_aux)
-    
 
-print(classification_report(Y_ground_truth_multi, Y_pred_binary_multi,
-                            target_names = label_names))
 
-#%% Split predictions per label
 
-Y_pred_score_single = {}
-Y_pred_binary_single = {}
-Y_ground_truth_single = {}
 
-for idx, label in enumerate(label_names):
-    Y_pred_score_single[label] = Y_pred_score[idx::num_labels]
-    Y_pred_binary_single[label] = Y_pred_binary[idx::num_labels]
-    Y_ground_truth_single[label] =  Y_ground_truth[idx::num_labels]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #------------------------------------------------------------------------------
 
