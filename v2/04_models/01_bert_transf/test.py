@@ -96,7 +96,7 @@ def main():
     args.dropout = 0.4
     
     # Path initialization
-    args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
+    args.path_model_holdout = os.path.join(args.input_dir, 'model_dev.pkl')
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
     args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
@@ -111,9 +111,9 @@ def main():
     with open(args.path_results_train, 'r') as fr:
         results = json.load(fr)
     
-    results['Y_test_ground_truth'] = Y_ground_truth.numpy()
-    results['Y_test_prediction_scores'] = Y_predicted_score.numpy()
-    results['Y_test_prediction_binary'] = Y_predicted_binary.numpy()
+    results['Y_test_ground_truth'] = Y_ground_truth.numpy().tolist()
+    results['Y_test_prediction_scores'] = Y_predicted_score.numpy().tolist()
+    results['Y_test_prediction_binary'] = Y_predicted_binary.numpy().tolist()
     
     # Save metrics
     with open(args.path_results_full, 'w') as fw:
