@@ -7,6 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 from transformers import AutoModel
 
@@ -37,14 +38,12 @@ class ECHR2_model(nn.Module):
 
         self.max_n_pars = args.max_n_pars
         self.h_dim = args.hidden_dim
-        self.h_dim_lstm = 200
         self.n_heads = args.n_heads
         self.n_labels = args.num_labels
         self.seq_len = args.seq_len
         self.dropout = args.dropout
-        self.num_layers = 1
                      
-        # Bert model
+        # Bert layer
         self.model_name = 'nlpaueb/legal-bert-small-uncased'
         self.bert_model = AutoModel.from_pretrained(self.model_name)
         # Freeze bert parameters
@@ -55,15 +54,8 @@ class ECHR2_model(nn.Module):
         self.transf_enc = nn.TransformerEncoderLayer(d_model = self.h_dim,
                                                      nhead = self.n_heads)
     
-        # LSTM layer
-        self.lstm = nn.LSTM(input_size = self.h_dim,
-                            hidden_size = self.h_dim_lstm,
-                            num_layers = self.num_layers,
-                            bidirectional = True,
-                            batch_first = True)
-
         # Fully connected output
-        self.fc_out = nn.Linear(in_features = self.h_dim_lstm*2,
+        self.fc_out = nn.Linear(in_features = self.max_n_pars*self.h_dim,
                                 out_features = self.n_labels)
 
         # Sigmoid
@@ -71,13 +63,18 @@ class ECHR2_model(nn.Module):
 
         # Dropout
         self.drops = nn.Dropout(self.dropout)
-        
+           
         # Batch normalization
-        self.bn1 = nn.BatchNorm1d(self.h_dim_lstm*2)
-            
+        self.bn1 = nn.BatchNorm1d(self.max_n_pars*self.h_dim)
+ 
     def forward(self, X_facts_ids, X_facts_token_types, X_facts_attn_masks):
-        # Encode paragraphs - BERT
+        batch_size = X_facts_ids.size()[0]
+        device = X_facts_ids.get_device()
+        
+        # Encode paragraphs - BERT & generate transfomers masks
         bert_out = {}
+        transf_mask = torch.zeros((batch_size,
+                                   self.max_n_pars), dtype=torch.bool)  # batch_size x max_n_pars
         
         for idx in tqdm(range(0, self.max_n_pars),
                         desc = 'Iterating through paragraphs'):
@@ -88,8 +85,13 @@ class ECHR2_model(nn.Module):
             
             # Slice sequence
             facts_ids = X_facts_ids[:, span_b:span_e]                   # batch_size x seq_len
-            #facts_token_types = X_facts_token_types[:, span_b:span_e]  # batch_size x seq_len
+            facts_token_types = X_facts_token_types[:, span_b:span_e]   # batch_size x seq_len
             facts_attn_masks = X_facts_attn_masks[:, span_b:span_e]     # batch_size x seq_len
+            
+            # Generate masks for transformer
+            mask_aux = torch.sum(facts_ids, dim = 1).view(-1,1)         # batch_size x 1
+            mask_aux = (mask_aux == 0)                                  # batch_size x 1
+            transf_mask[:, idx] = mask_aux.view(1,-1)                   # 1 x batch_size
             
             # Generate input dict to bert model
             bert_input = {'input_ids': facts_ids.long(),
@@ -102,16 +104,16 @@ class ECHR2_model(nn.Module):
         
         x = torch.cat(list(bert_out.values()), dim=1)                   # batch_size x max_n_pars x h_dim
         
-        # Encode document - LSTM
-        self.lstm.flatten_parameters()
-        x = self.lstm(x)                                                # Tuple (len = 2)
-        x_fwd = x[0][:, -1, 0:self.h_dim_lstm]                          # batch_size x hidden_dim
-        x_bkwd = x[0][:, 0, self.h_dim_lstm:self.h_dim_lstm*2]          # batch_size x hidden_dim
-        x = torch.cat((x_fwd, x_bkwd), dim = 1)                         # batch_size x (hidden_dim x 2)
-        x = self.drops(x)                                               # batch_size x (hidden_dim x 2)
+        # Encode document - Transformer
+        transf_mask = transf_mask.to(device)
+        x = x.transpose(0,1)                                            # max_n_pars x batch_size x h_dim
+        x = self.transf_enc(x,src_key_padding_mask = transf_mask)       # max_n_pars x batch_size x h_dim
+        x = self.drops(x)
+        x = x.transpose(0,1)                                            # batch_size x max_n_pars x h_dim
         
         # Multi-label classifier
-        x = self.bn1(x)                                                 # batch_size x (hidden_dim x 2)
+        x = x.reshape(-1, self.max_n_pars*self.h_dim)                   # batch_size x (max_n_pars x h_dim)
+        x = self.bn1(x)                                                 # batch_size x (max_n_pars x h_dim)
         x = self.fc_out(x)                                              # batch_size x n_lab
         x = self.sigmoid(x)                                             # batch_size x n_lab
 

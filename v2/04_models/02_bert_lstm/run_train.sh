@@ -2,7 +2,7 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/01_TEST_DELETE_3
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/03_TEST_BERT_LSTM_20ep
 
 python train.py \
     --input_dir=$INPUT_DIR \
@@ -23,10 +23,10 @@ python train.py \
     --save_final_model=True \
     --save_model_steps=False \
     --use_cuda=True \
-    --gpu_ids=0,1,2,3
+    --gpu_ids=4,5,6,7
 
 #read -p 'EOF'
 
-#--batch_size=150
+#--batch_size=2400
 #--n_epochs=30
 #--max_n_pars=200

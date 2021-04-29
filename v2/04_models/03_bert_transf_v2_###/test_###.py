@@ -97,10 +97,11 @@ def main():
     
     # Path initialization
 #    args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
-    args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
+    args.path_model_holdout = os.path.join(args.input_dir, 'model_train.pkl')
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
-    args.path_results_full = os.path.join(args.work_dir, 'full_results_test.json')
+#    args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
+    args.path_results_full = os.path.join(args.work_dir, 'full_results_train.json')
     
     # Compute predictions
     Y_predicted_score, Y_predicted_binary, Y_ground_truth = test_f(args)
