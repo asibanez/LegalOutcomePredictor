@@ -8,6 +8,7 @@ WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/05_TE
 python test.py \
     --input_dir=$INPUT_DIR \
     --work_dir=$WORK_DIR \
+    --test_file=model_train.pkl \
     --batch_size=800 \
     --seq_len=512 \
     --num_labels=33 \

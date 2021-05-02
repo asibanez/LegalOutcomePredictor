@@ -25,8 +25,8 @@ def train_epoch_f(args, epoch, model, criterion,
     total_entries = 0
     sum_train_loss = 0
     
-    for X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels in \
-        tqdm(train_dl, desc = 'Training epoch'):
+    for step_idx, (X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels) in \
+        tqdm(enumerate(train_dl, desc = 'Training epoch')):
         
         # Move data to cuda
         if next(model.parameters()).is_cuda:
@@ -57,13 +57,11 @@ def train_epoch_f(args, epoch, model, criterion,
             pred_1_label = pred[:, idx]
             Y_1_label = Y_labels[:, idx]
             sum_correct[idx] = (pred_1_label == Y_1_label).sum().item()
-
-### CORREGIR idx!!!!! ------------------------------
-        
+      
         # Write log file
         with open(output_train_log_file_path, 'a+') as fw:
             fw.write(f'{str(datetime.datetime.now())} Epoch {epoch + 1} of {args.n_epochs}' +
-                     f' Step {idx + 1:,} of {len(train_dl):,}\n')
+                     f' Step {step_idx + 1:,} of {len(train_dl):,}\n')
 
     # Compute metrics
     avg_train_loss = sum_train_loss / total_entries

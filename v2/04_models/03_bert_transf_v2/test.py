@@ -11,9 +11,7 @@ import pandas as pd
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-from sklearn.metrics import roc_auc_score
 from model_v4 import ECHR2_dataset, ECHR2_model
 
 # Test function
@@ -76,6 +74,8 @@ def main():
                        help = 'input data folder')
     parser.add_argument('--work_dir', default = None, type = str, required = True,
                        help = 'work folder')
+    parser.add_argument('--test_file', default = None, type = str, required = True,
+                       help = 'test file name')
     parser.add_argument('--batch_size', default = None, type = int, required = True,
                        help = 'train batch size')
     parser.add_argument('--seq_len', default = None, type = int, required = True,
@@ -96,12 +96,12 @@ def main():
     args.dropout = 0.4
     
     # Path initialization
-#    args.path_model_holdout = os.path.join(args.input_dir, 'model_test.pkl')
-    args.path_model_holdout = os.path.join(args.input_dir, 'model_train.pkl')
+    output_file = 'full_results_' + args.test_file.split('.')[0] + \
+        '.json'
+    args.path_model_holdout = os.path.join(args.input_dir, args.test_file)
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
-#    args.path_results_full = os.path.join(args.work_dir, 'full_results.json')
-    args.path_results_full = os.path.join(args.work_dir, 'full_results_train.json')
+    args.path_results_full = os.path.join(args.work_dir, output_file)
     
     # Compute predictions
     Y_predicted_score, Y_predicted_binary, Y_ground_truth = test_f(args)
