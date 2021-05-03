@@ -80,8 +80,8 @@ def label_process_f(labels):
     return labels_processed
 
 #%% Path definition
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_full'
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_full'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/02_toy_1'
 train_set_path = os.path.join(output_folder, 'model_train.pkl')
 val_set_path = os.path.join(output_folder, 'model_dev.pkl')
 test_set_path = os.path.join(output_folder, 'model_test.pkl')
@@ -91,7 +91,7 @@ num_labels = 33
 seq_len = 512
 max_n_pars = 200
 pad_int = 0
-toy_data = False
+toy_data = True
 len_toy_data = 100
 padded_len = seq_len * max_n_pars
 id_2_label = {0: '2',

@@ -8,10 +8,10 @@ import torch
 from transformers import AutoModel
 
 #%% Path definition
-input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/02_toy_bert'
-#input_folder = ''/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1''
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1_bert'
+#input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/02_toy_bert'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/02_toy_1'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_toy_1_bert'
 
 input_train_set_path = os.path.join(input_folder, 'model_train.pkl')
 input_dev_set_path = os.path.join(input_folder, 'model_dev.pkl')
@@ -24,15 +24,15 @@ output_test_set_path = os.path.join(output_folder, 'model_test.pkl')
 #%% Function definitions
 # Encode paragraphs - BERT encodings & masks for transformers
 
-def encode_par_f(dataset, bert_model):
+def encode_par_f(dataset, bert_model, device_id):
 
     bert_encoding_list = []
     transf_mask_list = []
     
     for _, row in tqdm(dataset.iterrows(), total=len(dataset), desc='iterating over samples'):
-        X_facts_ids = row['facts_ids']
-        X_facts_token_types = row['facts_token_type']
-        X_facts_attn_masks = row['facts_att_mask']
+        X_facts_ids = row['facts_ids'].to(device_id)
+        X_facts_token_types = row['facts_token_type'].to(device_id)
+        X_facts_attn_masks = row['facts_att_mask'].to(device_id)
         
         bert_out = {}
         transf_mask = torch.zeros(max_n_pars, dtype=torch.bool)             # max_n_pars
@@ -78,23 +78,27 @@ def encode_par_f(dataset, bert_model):
 #%% Global initialization
 max_n_pars = 200
 seq_len = 512
+device_id = 0
 
 #%% Read dataset
+print('Loading datasets')
 train_dataset = pd.read_pickle(input_train_set_path)
 dev_dataset = pd.read_pickle(input_dev_set_path)
 test_dataset = pd.read_pickle(input_test_set_path)
+print('Done')
 
 #%% Define model
 model_name = 'nlpaueb/legal-bert-small-uncased'
 bert_model = AutoModel.from_pretrained(model_name)
+bert_model.to(device_id)
 # Freeze bert parameters
 for parameter in bert_model.parameters():
     parameter.requires_grad = False
 
 #%% Process datasets
-train_dataset_bert = encode_par_f(train_dataset, bert_model)
-dev_dataset_bert = encode_par_f(dev_dataset, bert_model)
-test_dataset_bert = encode_par_f(test_dataset, bert_model)
+train_dataset_bert = encode_par_f(train_dataset, bert_model, device_id)
+dev_dataset_bert = encode_par_f(dev_dataset, bert_model, device_id)
+test_dataset_bert = encode_par_f(test_dataset, bert_model, device_id)
 
 #%% Save datasets
 if not os.path.isdir(output_folder):
@@ -104,8 +108,4 @@ if not os.path.isdir(output_folder):
 pd.to_pickle(train_dataset, output_train_set_path)
 pd.to_pickle(dev_dataset, output_dev_set_path)
 pd.to_pickle(test_dataset, output_test_set_path)
-
-        
-
-
                          
