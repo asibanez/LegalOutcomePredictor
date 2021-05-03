@@ -10,8 +10,8 @@ from transformers import AutoModel
 #%% Path definition
 #input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
 #output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/02_toy_bert'
-input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/02_toy_1'
-output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_toy_1_bert'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_full_1_bert'
 
 input_train_set_path = os.path.join(input_folder, 'model_train.pkl')
 input_dev_set_path = os.path.join(input_folder, 'model_dev.pkl')
@@ -67,7 +67,7 @@ def encode_par_f(dataset, bert_model, device_id):
         transf_mask_list.append(transf_mask)
     
     # Generate output dataframe
-    output_df = pd.Dataframe({'bert_encoding': bert_encoding_list,
+    output_df = pd.DataFrame({'bert_encoding': bert_encoding_list,
                               'transf_mask': transf_mask_list,
                               'labels': dataset.labels})
 
@@ -76,13 +76,13 @@ def encode_par_f(dataset, bert_model, device_id):
 #%% Global initialization
 max_n_pars = 200
 seq_len = 512
-device_id = 0
+device_id = 1
 
 #%% Read dataset
 print('Loading datasets')
-train_dataset = pd.read_pickle(input_train_set_path)
-dev_dataset = pd.read_pickle(input_dev_set_path)
-test_dataset = pd.read_pickle(input_test_set_path)
+train_dataset = pd.read_pickle(input_train_set_path)    #[0:10] #toy
+dev_dataset = pd.read_pickle(input_dev_set_path)        #[0:10] #toy
+test_dataset = pd.read_pickle(input_test_set_path)      #[0:10] #toy
 print('Done')
 
 #%% Define model
