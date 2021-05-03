@@ -130,6 +130,8 @@ def main():
                        help = 'number of total epochs to run')
     parser.add_argument('--batch_size', default = None, type = int, required = True,
                        help = 'train batch size')
+    parser.add_argument('--shuffle_train', default = None, type = str, required = True,
+                       help = 'shuffle train set')
     parser.add_argument('--lr', default = None, type = float, required = True,
                        help = 'learning rate')
     parser.add_argument('--wd', default = None, type = float, required = True,
@@ -192,7 +194,7 @@ def main():
 
     # Instantiate dataloaders
     train_dl = DataLoader(train_dataset, batch_size = args.batch_size,
-                          shuffle = True, drop_last = False)
+                          shuffle = eval(args.shuffle_train), drop_last = False)
     dev_dl = DataLoader(dev_dataset, batch_size = args.batch_size * 2,
                         shuffle = False)
 
