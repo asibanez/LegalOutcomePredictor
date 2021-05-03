@@ -8,10 +8,10 @@ import torch
 from transformers import AutoModel
 
 #%% Path definition
-#input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
-#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/02_toy_bert'
-input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
-output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_full_1_bert'
+input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
+output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_toy_bert_encoded'
+#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
+#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_full_1_bert'
 
 input_train_set_path = os.path.join(input_folder, 'model_train.pkl')
 input_dev_set_path = os.path.join(input_folder, 'model_dev.pkl')
@@ -27,12 +27,20 @@ def encode_par_f(dataset, bert_model, device_id):
 
     bert_encoding_list = []
     transf_mask_list = []
-    empty_par_ids = torch.cat([torch.tensor([101,102]),torch.zeros(510)]).long().to(device_id)
+    empty_par_ids = torch.cat([torch.tensor([101,102]),torch.zeros(510)]).long()
+    if torch.cuda.is_available():
+        empty_par_ids = empty_par_ids.to(device_id)
     
     for row_idx, row in tqdm(dataset.iterrows(), total=len(dataset), desc='iterating over samples'):
-        X_facts_ids = row['facts_ids'].to(device_id)
-        X_facts_token_types = row['facts_token_type'].to(device_id)
-        X_facts_attn_masks = row['facts_att_mask'].to(device_id)
+        X_facts_ids = row['facts_ids']
+        X_facts_token_types = row['facts_token_type']
+        X_facts_attn_masks = row['facts_att_mask']
+        
+        # Move row to cuda
+        if torch.cuda.is_available():
+            X_facts_ids = X_facts_ids.to(device_id)
+            X_facts_token_types = X_facts_token_types.to(device_id)
+            X_facts_attn_masks = X_facts_attn_masks.to(device_id)
         
         bert_out = {}
         transf_mask = torch.zeros(max_n_pars, dtype=torch.bool)             # max_n_pars
@@ -80,18 +88,21 @@ device_id = 1
 
 #%% Read dataset
 print('Loading datasets')
-train_dataset = pd.read_pickle(input_train_set_path)    #[0:10] #toy
-dev_dataset = pd.read_pickle(input_dev_set_path)        #[0:10] #toy
-test_dataset = pd.read_pickle(input_test_set_path)      #[0:10] #toy
+train_dataset = pd.read_pickle(input_train_set_path)    [0:3] #toy
+dev_dataset = pd.read_pickle(input_dev_set_path)        [0:3] #toy
+test_dataset = pd.read_pickle(input_test_set_path)      [0:3] #toy
 print('Done')
 
 #%% Define model
 model_name = 'nlpaueb/legal-bert-small-uncased'
 bert_model = AutoModel.from_pretrained(model_name)
-bert_model.to(device_id)
 # Freeze bert parameters
 for parameter in bert_model.parameters():
     parameter.requires_grad = False
+
+#%% Move model to CUDA
+if torch.cuda.is_available():
+    bert_model.to(device_id)
 
 #%% Process datasets
 train_dataset_bert = encode_par_f(train_dataset, bert_model, device_id)
@@ -103,7 +114,7 @@ if not os.path.isdir(output_folder):
     os.makedirs(output_folder)
     print("Created folder : ", output_folder)
 
-pd.to_pickle(train_dataset, output_train_set_path)
-pd.to_pickle(dev_dataset, output_dev_set_path)
-pd.to_pickle(test_dataset, output_test_set_path)
+pd.to_pickle(train_dataset_bert, output_train_set_path)
+pd.to_pickle(dev_dataset_bert, output_dev_set_path)
+pd.to_pickle(test_dataset_bert, output_test_set_path)
                          
