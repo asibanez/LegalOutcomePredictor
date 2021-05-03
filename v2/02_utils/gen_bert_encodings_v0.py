@@ -23,13 +23,13 @@ output_test_set_path = os.path.join(output_folder, 'model_test.pkl')
 
 #%% Function definitions
 # Encode paragraphs - BERT encodings & masks for transformers
-
 def encode_par_f(dataset, bert_model, device_id):
 
     bert_encoding_list = []
     transf_mask_list = []
+    empty_par_ids = torch.cat([torch.tensor([101,102]),torch.zeros(510)]).long().to(device_id)
     
-    for _, row in tqdm(dataset.iterrows(), total=len(dataset), desc='iterating over samples'):
+    for row_idx, row in tqdm(dataset.iterrows(), total=len(dataset), desc='iterating over samples'):
         X_facts_ids = row['facts_ids'].to(device_id)
         X_facts_token_types = row['facts_token_type'].to(device_id)
         X_facts_attn_masks = row['facts_att_mask'].to(device_id)
@@ -37,8 +37,7 @@ def encode_par_f(dataset, bert_model, device_id):
         bert_out = {}
         transf_mask = torch.zeros(max_n_pars, dtype=torch.bool)             # max_n_pars
         
-        for idx in tqdm(range(0, max_n_pars), desc = 'Iterating through paragraphs'):
-    
+        for idx in tqdm(range(0, max_n_pars), desc = 'Iterating through paragraphs'):   
             span_b = seq_len * idx
             span_e = seq_len * (idx + 1)
             
@@ -48,9 +47,8 @@ def encode_par_f(dataset, bert_model, device_id):
             facts_attn_masks = X_facts_attn_masks[span_b:span_e]            # seq_len
             
             # Generate masks for transformer
-            mask_aux = torch.sum(facts_ids)                                 # 1
-            mask_aux = (mask_aux == 0)                                      # 1
-            transf_mask[idx] = mask_aux                                     # 1
+            if torch.equal(facts_ids, empty_par_ids):
+                transf_mask[idx] = True                                     # 1
             
             # Generate input dict to bert model
             bert_input = {'input_ids': facts_ids.unsqueeze(0),              # 1 x seq_len
