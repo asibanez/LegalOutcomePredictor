@@ -71,17 +71,15 @@ class ECHR2_model(nn.Module):
         batch_size = X_facts_ids.size()[0]
         device = X_facts_ids.get_device()
         empty_par_ids = torch.cat([torch.tensor([101,102]),
-                                   torch.zeros(510)]).long().to(device) # seq_len
-        
+                                   torch.zeros(510)]).long()            # seq_len
+        empty_par_ids = empty_par_ids.repeat(batch_size, 1).to(device)  # batch_size x seq_len
+
         # Encode paragraphs - BERT & generate transfomers masks
         bert_out = {}
         transf_mask = torch.zeros((batch_size,
                                    self.max_n_pars), dtype=torch.bool)  # batch_size x max_n_pars
         
-        for idx in tqdm(range(0, self.max_n_pars),
-                        desc = 'Iterating through paragraphs'):
-
-#        for idx in range(0, self.max_n_pars):
+        for idx in tqdm(range(0, self.max_n_pars), desc = 'Iterating through paragraphs'):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             
@@ -91,10 +89,10 @@ class ECHR2_model(nn.Module):
             facts_attn_masks = X_facts_attn_masks[:, span_b:span_e]     # batch_size x seq_len
             
             # Generate masks for transformer
-            empty_par_ids = empty_par_ids.repeat(batch_size, 1)         # batch_size x seq_len
+
             equiv = torch.eq(facts_ids, empty_par_ids)                  # batch_size x seq_len
-            equiv = equiv.all(dim = 1).squeeze(0)                       # 1 x batch_size
-            transf_mask[:, idx] = equiv                                 # 1 x batch_size
+            equiv = equiv.all(dim = 1)                                  # batch_size
+            transf_mask[:, idx] = equiv                                 # batch_size
             
             # Generate input dict to bert model
             bert_input = {'input_ids': facts_ids.long(),
