@@ -124,7 +124,7 @@ class ECHR2_model(nn.Module):
         x = self.bn1(x)                                                 # batch_size x h_dim x max_n_pars
         x = x.transpose(1,2)                                            # batch_size x max_n_pars x h_dim
         x = self.fc_1(x)                                                # batch_size x max_n_pars x h_dim/2
-        x = self.drops(x)                                                  # batch_size x max_n_pars x h_dim/2
+        x = self.drops(x)                                               # batch_size x max_n_pars x h_dim/2
 
         # Max pooling
         x = x.transpose(1,2)                                            # batch_size x h_dim/2 x max_n_pars
@@ -134,6 +134,6 @@ class ECHR2_model(nn.Module):
         x = x.squeeze(2)                                                # batch_size x h_dim/2
         x = self.bn2(x)                                                 # batch_size x h_dim/2
         x = self.fc_out(x)                                              # batch_size x n_lab
-        x = self.sigmoid(x)                                                # batch_size x n_lab
+        x = self.sigmoid(x)                                             # batch_size x n_lab
 
         return x
