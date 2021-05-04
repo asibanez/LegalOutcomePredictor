@@ -23,7 +23,7 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/06_TEST_BERT_TRANSF_v3_100ep'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/05_TEST_BERT_TRANSF_v2_100ep'
 
 #%% Global initialization
 random.seed(1234)
@@ -63,7 +63,8 @@ tgt_labels = ['2',
               'P12-1']
 
 #%% Read data json
-input_path = os.path.join(base_path, 'full_results_model_dev.json')
+#input_path = os.path.join(base_path, 'full_results_model_dev.json')
+input_path = os.path.join(base_path, 'full_results_dev.json')
 with open(input_path) as fr:
     results = json.load(fr)
 
@@ -78,15 +79,10 @@ Y_ground_truth = [[int(x) for x in sublist] for sublist in Y_ground_truth]
 print(classification_report(Y_ground_truth, Y_pred_binary,
       target_names = tgt_labels))
 
-
-
-
-
-
 #------------------------------------------------------------------------------
 
 
-S#%% Compute class balances:
+#%% Compute class balances:
 
 num_negative = Y_ground_truth.count(0)
 num_positive = Y_ground_truth.count(1)
@@ -140,6 +136,7 @@ plt.plot(results['training_loss'], label = 'train')
 plt.plot(results['validation_loss'], label = 'validation')
 plt.xlabel('Epochs')
 plt.legend(loc = 'lower left')
+plt.grid()
 plt.show()
 
 #%% Plot ROC curve
