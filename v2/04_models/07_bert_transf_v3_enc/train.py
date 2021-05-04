@@ -24,7 +24,7 @@ def train_epoch_f(args, epoch, model, criterion,
     sum_train_loss = 0
     
     for step_idx, (X_bert_encoding, X_transf_mask, Y_labels) in \
-        tqdm(enumerate(train_dl), desc = 'Training epoch'):
+        tqdm(enumerate(train_dl), total = len(train_dl), desc = 'Training epoch'):
         
         # Move data to cuda
         if next(model.parameters()).is_cuda:
