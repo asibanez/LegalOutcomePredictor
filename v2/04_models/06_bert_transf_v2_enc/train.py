@@ -1,7 +1,6 @@
 # v0
 
 #%% Imports
-
 import os
 import json
 import random
@@ -15,7 +14,6 @@ from torch.utils.data import DataLoader
 from model_v4 import ECHR2_dataset, ECHR2_model
 
 #%% Train function
-
 def train_epoch_f(args, epoch, model, criterion, 
                   optimizer, train_dl,
                   output_train_log_file_path, device):
@@ -25,21 +23,20 @@ def train_epoch_f(args, epoch, model, criterion,
     total_entries = 0
     sum_train_loss = 0
     
-    for step_idx, (X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels) in \
+    for step_idx, (X_bert_encoding, X_transf_mask, Y_labels) in \
         tqdm(enumerate(train_dl), desc = 'Training epoch'):
         
         # Move data to cuda
         if next(model.parameters()).is_cuda:
-            X_facts_ids = X_facts_ids.to(device)
-            #X_facts_token_types = X_facts_token_types.to(device)
-            X_facts_attn_masks = X_facts_attn_masks.to(device)
+            X_bert_encoding = X_bert_encoding.to(device)
+            X_transf_mask = X_transf_mask.to(device)
             Y_labels = Y_labels.to(device)
         
         # Zero gradients
         optimizer.zero_grad()
         
         #Forward + backward + optimize
-        pred = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
+        pred = model(X_bert_encoding, X_transf_mask)
         loss = criterion(pred, Y_labels)
         
         # Backpropagate
@@ -49,7 +46,7 @@ def train_epoch_f(args, epoch, model, criterion,
         optimizer.step()           
         
         # Book-keeping
-        current_batch_size = X_facts_ids.size()[0]
+        current_batch_size = X_bert_encoding.size()[0]
         total_entries += current_batch_size
         sum_train_loss += (loss.item() * current_batch_size)
         pred = torch.round(pred)
@@ -76,30 +73,27 @@ def train_epoch_f(args, epoch, model, criterion,
     return avg_train_loss, avg_train_acc
 
 #%% Validation function
-
 def val_epoch_f(args, model, criterion, dev_dl, device):
     model.eval()
     sum_correct = {x:0 for x in range (0,args.num_labels)}
     sum_val_loss = 0
     total_entries = 0
 
-    for X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels in \
-        tqdm(dev_dl, desc = 'Validation'):
+    for X_bert_encoding, X_transf_mask, Y_labels in tqdm(dev_dl, desc = 'Validation'):
         
         # Move to cuda
         if next(model.parameters()).is_cuda:
-            X_facts_ids = X_facts_ids.to(device)
-            X_facts_token_types = X_facts_token_types.to(device)
-            X_facts_attn_masks = X_facts_attn_masks.to(device)
+            X_bert_encoding = X_bert_encoding.to(device)
+            X_transf_mask = X_transf_mask.to(device)
             Y_labels = Y_labels.to(device)
                     
         # Compute predictions:
         with torch.no_grad():
-            pred = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
+            pred = model(X_bert_encoding, X_transf_mask)
             loss = criterion(pred, Y_labels)
         
         # Book-keeping
-        current_batch_size = X_facts_ids.size()[0]
+        current_batch_size = X_bert_encoding.size()[0]
         total_entries += current_batch_size
         sum_val_loss += (loss.item() * current_batch_size)
         pred = torch.round(pred)
@@ -115,7 +109,6 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
     return avg_val_loss, avg_val_accuracy
 
 #%% Main
-
 def main():
     # Argument parsing
     parser = argparse.ArgumentParser()
