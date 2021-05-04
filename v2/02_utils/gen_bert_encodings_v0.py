@@ -8,10 +8,10 @@ import torch
 from transformers import AutoModel
 
 #%% Path definition
-input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_toy_bert_encoded'
-#input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_full_1_bert'
+#input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/00_toy'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_toy_bert_encoded'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_full_1'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/03_full_1_bert_encoded'
 
 input_train_set_path = os.path.join(input_folder, 'model_train.pkl')
 input_dev_set_path = os.path.join(input_folder, 'model_dev.pkl')
@@ -85,13 +85,20 @@ def encode_par_f(dataset, bert_model, device_id):
 max_n_pars = 200
 seq_len = 512
 device_id = 1
+toy_dataset = False
+len_toy_dataset = 3
 
 #%% Read dataset
 print('Loading datasets')
-train_dataset = pd.read_pickle(input_train_set_path)    [0:3] #toy
-dev_dataset = pd.read_pickle(input_dev_set_path)        [0:3] #toy
-test_dataset = pd.read_pickle(input_test_set_path)      [0:3] #toy
+train_dataset = pd.read_pickle(input_train_set_path)
+dev_dataset = pd.read_pickle(input_dev_set_path)
+test_dataset = pd.read_pickle(input_test_set_path)
 print('Done')
+
+if toy_dataset: 
+    train_dataset = train_dataset[0:len_toy_dataset]
+    dev_dataset = dev_dataset[0:len_toy_dataset]
+    test_dataset = test_dataset[0:len_toy_dataset]
 
 #%% Define model
 model_name = 'nlpaueb/legal-bert-small-uncased'
