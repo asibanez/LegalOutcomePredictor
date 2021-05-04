@@ -48,7 +48,10 @@ class ECHR2_model(nn.Module):
                               out_features = int(self.h_dim/2))
         
         # Fully connected output
-        self.fc_out = nn.Linear(in_features = int(self.h_dim/2),
+#        self.fc_out = nn.Linear(in_features = int(self.h_dim/2),
+#                                out_features = self.n_labels)
+
+        self.fc_out = nn.Linear(in_features = int(self.h_dim),
                                 out_features = self.n_labels)
 
         # Max pooling
@@ -62,7 +65,9 @@ class ECHR2_model(nn.Module):
            
         # Batch normalization
         self.bn1 = nn.BatchNorm1d(self.h_dim)
-        self.bn2 = nn.BatchNorm1d(int(self.h_dim/2))
+#        self.bn2 = nn.BatchNorm1d(int(self.h_dim/2))
+        self.bn2 = nn.BatchNorm1d(int(self.h_dim))
+        
  
     def forward(self, X_bert_encoding, X_transf_mask):
         # X_bert_encoding                                               # batch_size x max_n_pars x h_dim
@@ -78,16 +83,16 @@ class ECHR2_model(nn.Module):
 #        x = x.transpose(1,2)                                            # batch_size x h_dim x max_n_pars
 #        x = self.bn1(x)                                                 # batch_size x max_n_pars x h_dim
 #        x = x.transpose(1,2)                                            # batch_size x max_n_pars x h_dim
-        x = self.fc_1(x)                                                # batch_size x max_n_pars x h_dim/2
-        x = self.drops(x)                                               # batch_size x max_n_pars x h_dim/2
+#        x = self.fc_1(x)                                                # batch_size x max_n_pars x h_dim/2
+#        x = self.drops(x)                                               # batch_size x max_n_pars x h_dim/2
 
         # Max pooling
-        x = x.transpose(1,2)                                            # batch_size x h_dim/2 x max_n_pars
-        x = self.max_pool(x)                                            # batch_size x h_dim/2 x 1
+        x = x.transpose(1,2)                                            # batch_size x h_dim x max_n_pars
+        x = self.max_pool(x)                                            # batch_size x h_dim x 1
         
         # Multi-label classifier
-        x = x.squeeze(2)                                                # batch_size x h_dim/2
-        x = self.bn2(x)                                                 # batch_size x h_dim/2
+        x = x.squeeze(2)                                                # batch_size x h_dim
+        x = self.bn2(x)                                                 # batch_size x h_dim
         x = self.fc_out(x)                                              # batch_size x n_lab
         x = self.sigmoid(x)                                             # batch_size x n_lab
 
