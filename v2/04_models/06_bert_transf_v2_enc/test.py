@@ -43,18 +43,16 @@ def test_f(args):
     Y_predicted_binary = []
     Y_ground_truth = []
 
-    for X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels in \
-        tqdm(test_dl, desc = 'Testing'):
+    for X_bert_encoding, X_transf_mask, Y_labels in tqdm(test_dl, desc = 'Testing'):
 
         # Move to cuda
-        X_facts_ids = X_facts_ids.to(device)
-        #X_facts_token_types = X_facts_token_types.to(device)
-        X_facts_attn_masks = X_facts_attn_masks.to(device)
+        X_bert_encoding = X_bert_encoding.to(device)
+        X_transf_mask = X_transf_mask.to(device)
         Y_labels = Y_labels.to(device)
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
+            pred_batch_score = model(X_bert_encoding, X_transf_mask)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
