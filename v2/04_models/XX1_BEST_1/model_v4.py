@@ -92,7 +92,7 @@ class ECHR2_model(nn.Module):
         # Multi-label classifier
         x = x.reshape(batch_size, self.max_n_pars*int(self.h_dim/2))    # batch_size x (max_n_pars x h_dim/2)
         x = self.fc_out(x)                                              # batch_size x n_lab
-        #x = self.bn2(x)                                                 # batch_size x n_lab
+#        x = self.bn2(x)                                                 # batch_size x n_lab
         x = self.sigmoid(x)                                             # batch_size x n_lab
 
         return x
