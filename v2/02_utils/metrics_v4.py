@@ -23,7 +23,7 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/09_BERT_TRANSF_v3_100ep_encod'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/99_TESTING'
 
 #%% Global initialization
 random.seed(1234)
@@ -84,7 +84,7 @@ plt.plot(results['training_loss'], label = 'train')
 plt.plot(results['validation_loss'], label = 'validation')
 plt.xlabel('Epochs')
 plt.legend(loc = 'upper right')
-plt.ylim(0.05, 0.75)
+#plt.ylim(0.05, 0.75)
 plt.grid()
 plt.show()
 
