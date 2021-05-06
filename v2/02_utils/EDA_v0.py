@@ -1,4 +1,5 @@
 #%% Imports
+from tqdm import tqdm
 from datasets import load_dataset
 import matplotlib.pyplot as plt
 
@@ -32,6 +33,24 @@ print(f'Max number of paragraphs in val = {max_len_val}')
 print(f'Max number of paragraphs in test = {max_len_test}')
 print(f'Max number of paragraphs = {max_len_all}')
 
+#%%  Plot full histogram
+_ = plt.hist(lens_all, bins = 50, range = [0,512])
+
+
+#%% Compute number of cases with more than x paragraphs
+num_par = [x > 200 for x in lens_all]
+print(sum(num_par))
+
+#%% Compute number of tokens per paragraph
+n_tokens_list = []
+for facts in tqdm(train_facts):
+    for fact in facts:
+        n_tokens = len(fact.split(' '))
+        n_tokens_list.append(n_tokens)
+
+_ = plt.hist(n_tokens_list, bins = 50)
+print(f'Max_num_tokens = {max(n_tokens_list)}')
+
 #%% EDA labels
 train_labels = train_set['labels']
 val_labels = val_set['labels']
@@ -54,12 +73,6 @@ print(f'Number of labels = {len(all_labels_unique)}')
 
 _ = plt.hist(all_labels)
 
-#%% Scracth
-_ = plt.hist(lens_all, bins = 50)
-
-#%%
-num_par = [x > 200 for x in lens_all]
-print(sum(num_par))
 #%%
 
 
