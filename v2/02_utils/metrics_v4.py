@@ -23,7 +23,7 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/11_BERT_TRANSF_v2_FIX_50par_10ep'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/12_BERT_TRANSF_v2_FIX_50par_20ep'
 
 #%% Global initialization
 random.seed(1234)
@@ -63,7 +63,7 @@ tgt_labels = ['2',
               'P12-1']
 
 #%% Read data json
-input_path = os.path.join(base_path, 'full_results_model_dev.json')
+input_path = os.path.join(base_path, 'full_results_model_train.json')
 #input_path = os.path.join(base_path, 'full_results_dev.json')
 with open(input_path) as fr:
     results = json.load(fr)
