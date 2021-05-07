@@ -2,12 +2,12 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/10_BERT_TRANSF_v2_FIX_50par_50ep
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/12_BERT_TRANSF_v2_FIX_50par_20ep
 
-python train.py \
+python train_###.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
-    --n_epochs=50 \
+    --n_epochs=20 \
     --batch_size=40 \
     --shuffle_train=True \
     --lr=2e-5 \
@@ -24,7 +24,7 @@ python train.py \
     --save_final_model=True \
     --save_model_steps=True \
     --use_cuda=True \
-    --gpu_ids=0,1,2,3,4,5,6
+    --gpu_ids=0,1,2,3,4,5,6,7
 
 #read -p 'EOF'
 

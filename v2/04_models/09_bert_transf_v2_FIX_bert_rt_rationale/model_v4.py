@@ -8,6 +8,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.autograd as autograd
 from torch.utils.data import Dataset
 from transformers import AutoModel
 
@@ -76,18 +77,21 @@ class ECHR2_model(nn.Module):
         # Batch normalization
         self.bn1 = nn.BatchNorm1d(self.max_n_pars*self.h_dim)
  
-    def gumbel_softmax(input, temperature, device):
-        noise = torch.rand(input.size())
-        noise.add_(1e-9).log_().neg_()
-        noise.add_(1e-9).log_().neg_()
-        noise = autograd.Variable(noise).to(device)
-        x = (input + noise) / temperature
-        x = F.softmax(x.view(-1,  x.size()[-1]), dim=-1)
+    def gumbel_softmax_f(self, input, temperature, device):
+#        noise = nn.Parameter(torch.rand(input.size()), requires_grad = True)    # batch_size x max_n_pars x h_dim 
+        noise = torch.rand(input.size())                                        # batch_size x max_n_pars x h_dim
+        noise.add_(1e-9).log_().neg_()                                          # batch_size x max_n_pars x h_dim
+        noise.add_(1e-9).log_().neg_()                                          # batch_size x max_n_pars x h_dim
+        noise = autograd.Variable(noise).to(device)                             # batch_size x max_n_pars x h_dim
+#        noise = noise.to(device)                                                # batch_size x max_n_pars x h_dim
+        x = (input + noise) / temperature                                       # batch_size x max_n_pars x h_dim
+        x = F.softmax(x.view(-1,  x.size()[-1]), dim = -1)
+        x = x.view_as(input)                                                    # batch_size x max_n_pars x h_dim
         
-        return x.view_as(input)
+        return x
  
     
-    def forward(self, X_facts_ids, X_facts_token_types, X_facts_attn_masks):
+    def forward(self, X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode):
         batch_size = X_facts_ids.size()[0]
         device = X_facts_ids.get_device()
         empty_par_ids = torch.cat([torch.tensor([101,102]),
@@ -138,10 +142,10 @@ class ECHR2_model(nn.Module):
         x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x h_dim
         #x_Q = self.drops(x_Q) #????                                    # batch_size x max_n_pars x h_dim
         # Mask generation
-        probs = self.gumbel_softmax(x_Q, self.gumbel_temp, device)      # ##???
-        z = probs[:,:,1]                                                # ##???
+        probs = self.gumbel_softmax_f(x_Q, self.gumbel_temp, device)    # batch_size x max_n_pars x h_dim
+        z = probs[:,:,1]                                                # batch_size x max_n_pars
         
-        if self.train:
+        if mode == 'train':
             mask = z
         else:
             mask = torch.ge(z, max_z.unsqueeze(-1)).float()
@@ -149,13 +153,13 @@ class ECHR2_model(nn.Module):
         # ENCODER
         # Projection into K-space
         x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
-        x_K = F.relu(x_q)                                               # batch_size x max_n_pars x h_dim
+        x_K = F.relu(x_K)                                               # batch_size x max_n_pars x h_dim
         # Masking
-        x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
+        x = x_K * mask.unsqueeze(-1)                                    # batch_size x max_n_pars x h_dim
                
         # Multi-label classifier
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                   # batch_size x (max_n_pars x h_dim)
         x = self.bn1(x)                                                 # batch_size x (max_n_pars x h_dim)
-        x = self.sigmoid(fc_out(x))                                     # batch_size x n_lab
+        x = self.sigmoid(self.fc_out(x))                                # batch_size x n_lab
 
         return x
