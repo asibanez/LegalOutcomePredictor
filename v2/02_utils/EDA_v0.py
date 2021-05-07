@@ -36,9 +36,8 @@ print(f'Max number of paragraphs = {max_len_all}')
 #%%  Plot full histogram
 _ = plt.hist(lens_all, bins = 50, range = [0,512])
 
-
 #%% Compute number of cases with more than x paragraphs
-num_par = [x > 200 for x in lens_all]
+num_par = [x > 50 for x in lens_all]
 print(sum(num_par))
 
 #%% Compute number of tokens per paragraph
@@ -48,7 +47,7 @@ for facts in tqdm(train_facts):
         n_tokens = len(fact.split(' '))
         n_tokens_list.append(n_tokens)
 
-_ = plt.hist(n_tokens_list, bins = 50)
+_ = plt.hist(n_tokens_list, bins = 50, range = [0,1000])
 print(f'Max_num_tokens = {max(n_tokens_list)}')
 
 #%% EDA labels
@@ -73,6 +72,14 @@ print(f'Number of labels = {len(all_labels_unique)}')
 
 _ = plt.hist(all_labels)
 
-#%%
+#%% EDA rationales - Compute number of paragraphs in gold rationales
+gold_rationales = test_set['gold_rationales']
+lens_gold_rationales = [len(x) for x in gold_rationales if x != []]
+avg_len_gold_rationales = sum(lens_gold_rationales)/len(lens_gold_rationales)
+print(f'Average number of paragraphs in gold rationales = {avg_len_gold_rationales}')
+
+#%% Compute paragraph IDs in rationales
+rationales = [x for sublist in gold_rationales for x in sublist]
+
 
 
