@@ -16,6 +16,7 @@ from model_v4 import ECHR2_dataset, ECHR2_model
 
 # Test function
 def test_f(args):
+    mode = 'test'
     # Load holdout data
     model_test = pd.read_pickle(args.path_model_holdout)
     
@@ -54,7 +55,7 @@ def test_f(args):
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
+            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)

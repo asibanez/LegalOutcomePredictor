@@ -43,7 +43,7 @@ class ECHR2_model(nn.Module):
         self.n_labels = args.num_labels
         self.seq_len = args.seq_len
         self.dropout = args.dropout
-        self.gumbel_temp = 10           #!!!
+        self.gumbel_temp = 1           #!!!
                      
         # Bert layer
         self.model_name = 'nlpaueb/legal-bert-small-uncased'
@@ -148,7 +148,8 @@ class ECHR2_model(nn.Module):
         if mode == 'train':
             mask = z
         else:
-            mask = torch.ge(z, max_z.unsqueeze(-1)).float()
+#            mask = torch.ge(z, max_z.unsqueeze(-1)).float()
+            mask = torch.ge(z, 0.5).float()
 
         # ENCODER
         # Projection into K-space
