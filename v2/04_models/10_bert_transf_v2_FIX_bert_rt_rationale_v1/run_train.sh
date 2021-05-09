@@ -2,7 +2,7 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/14_BERT_TRANSF_v2_FIX_50par_20ep_ratio
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/15_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v1
 
 python train_###.py \
     --input_dir=$INPUT_DIR \
@@ -28,6 +28,6 @@ python train_###.py \
 
 #read -p 'EOF'
 
-#--batch_size=50
+#--batch_size=40
 #--n_epochs=20
 #--max_n_pars=200

@@ -105,9 +105,9 @@ class ECHR2_model(nn.Module):
             equiv = equiv.all(dim = 1)                                  # batch_size
             transf_mask[:, idx] = equiv                                 # batch_size
             
-####        # Generate input dict to bert model
+            # Generate input dict to bert model
             bert_input = {'input_ids': facts_ids.long(),
-                          'token_type_ids': facts_token_types.long(),
+#                          'token_type_ids': facts_token_types.long(),
                           'attention_mask': facts_attn_masks.long()}
                   
             # Compute bert output
@@ -127,7 +127,7 @@ class ECHR2_model(nn.Module):
         # GENERATOR
         # Projection into Q-space
         x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 1
-        x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2),1,2))  # batch_size x max_n_pars x 1
+        x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 1
         x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 1
         x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 1
         # Mask generation
@@ -141,12 +141,12 @@ class ECHR2_model(nn.Module):
         # ENCODER
         # Projection into K-space
         x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
-        x_K = torch.transpose(self.bn_K(torch.transpose(x_K,1,2),1,2))  # batch_size x max_n_pars x h_dim
+        x_K = torch.transpose(self.bn_K(torch.transpose(x_K,1,2)),1,2)  # batch_size x max_n_pars x h_dim
         x_K = F.relu(x_K)                                               # batch_size x max_n_pars x h_dim
         x_K = self.drops(x_K)                                           # batch_size x max_n_pars x h_dim
         
         # MASKING
-        x = x_K * mask.unsqueeze(-1)                                    # batch_size x max_n_pars x h_dim
+        x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
                
         # MULTI-LABEL CLASSIFIER
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                   # batch_size x (max_n_pars x h_dim)
