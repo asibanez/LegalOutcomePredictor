@@ -62,7 +62,7 @@ class ECHR2_model(nn.Module):
     
         # Fully connected Q
         self.fc_Q = nn.Linear(in_features = self.h_dim,
-                              out_features = self.h_dim)
+                              out_features = 1)
         
         # Fully connected output
         self.fc_out = nn.Linear(in_features = self.max_n_pars*self.h_dim,
@@ -137,24 +137,26 @@ class ECHR2_model(nn.Module):
         x = x.transpose(0,1)                                            # batch_size x max_n_pars x h_dim
         
         # GENERATOR
-        # Projection into K-space
-        x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x h_dim
-        x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x h_dim
-        #x_Q = self.drops(x_Q) #????                                    # batch_size x max_n_pars x h_dim
+        # Projection into Q-space
+        x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 1
+        x_Q = self.bn_Q(x_Q)                                            # batch_size x max_n_pars x 1
+        x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 1
+        x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 1
         # Mask generation
-        probs = self.gumbel_softmax_f(x_Q, self.gumbel_temp, device)    # batch_size x max_n_pars x h_dim
-        z = probs[:,:,1]                                                # batch_size x max_n_pars
-        
         if mode == 'train':
-            mask = z
+            mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
+                                    hard = False)                       # batch_size x max_n_pars x 1
         else:
-#            mask = torch.ge(z, max_z.unsqueeze(-1)).float()
-            mask = torch.ge(z, 0.5).float()
+            mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
+                                    hard = True)                        # batch_size x max_n_pars x 1
 
         # ENCODER
         # Projection into K-space
         x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
+        x_K = self.bn_K(x_K)                                            # batch_size x max_n_pars x h_dim
         x_K = F.relu(x_K)                                               # batch_size x max_n_pars x h_dim
+        x_K = self.drops(x_K)                                           # batch_size x max_n_pars x h_dim
+        
         # Masking
         x = x_K * mask.unsqueeze(-1)                                    # batch_size x max_n_pars x h_dim
                

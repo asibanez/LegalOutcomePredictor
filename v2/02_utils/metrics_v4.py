@@ -23,7 +23,7 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/12_BERT_TRANSF_v2_FIX_50par_20ep'
+base_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/14_BERT_TRANSF_v2_FIX_50par_20ep_rationale'
 
 #%% Global initialization
 random.seed(1234)
