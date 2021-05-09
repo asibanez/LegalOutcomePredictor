@@ -50,6 +50,11 @@ for facts in tqdm(train_facts):
 _ = plt.hist(n_tokens_list, bins = 50, range = [0,1000])
 print(f'Max_num_tokens = {max(n_tokens_list)}')
 
+#%% Compute number of paragraphs with more than x tokens
+tgt_len = 256
+num_par = [x > tgt_len for x in lens_all]
+print(f'Number of paragraphs with more than {tgt_len} tokens = {sum(num_par)}')
+
 #%% EDA labels
 train_labels = train_set['labels']
 val_labels = val_set['labels']

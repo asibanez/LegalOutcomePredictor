@@ -63,7 +63,7 @@ tgt_labels = ['2',
               'P12-1']
 
 #%% Read data json
-input_path = os.path.join(base_path, 'full_results_model_train.json')
+input_path = os.path.join(base_path, 'full_results_model_dev.json')
 #input_path = os.path.join(base_path, 'full_results_dev.json')
 with open(input_path) as fr:
     results = json.load(fr)
