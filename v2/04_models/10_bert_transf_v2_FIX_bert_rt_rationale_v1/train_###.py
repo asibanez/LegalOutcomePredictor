@@ -39,10 +39,19 @@ def train_epoch_f(args, epoch, model, criterion,
         # Zero gradients
         optimizer.zero_grad()
         
-        #Forward + backward + optimize
-        pred = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
-        loss = criterion(pred, Y_labels)
+        #Forward
+        pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
         
+        # Compute loss
+        mask = mask.squeeze(2)
+        loss_classification = criterion(pred, Y_labels)
+        #loss_sparsity = torch.mean(torch.sum(mask, dim = 1)) 
+        loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
+        loss = loss_classification + args.lambda_s * loss_sparsity
+
+        print(f'\nSparsity loss = {loss_sparsity}')
+        print(f'Mask = {mask}')
+ 
         # Backpropagate
         loss.backward()
         
@@ -97,8 +106,14 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
                     
         # Compute predictions:
         with torch.no_grad():
-            pred = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
-            loss = criterion(pred, Y_labels)
+            pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
+
+        # Compute loss
+        mask = mask.squeeze(2)
+        loss_classification = criterion(pred, Y_labels)
+        #loss_sparsity = torch.mean(torch.sum(mask, dim = 1)) 
+        loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
+        loss = loss_classification + args.lambda_s * loss_sparsity
         
         # Book-keeping
         current_batch_size = X_facts_ids.size()[0]
@@ -156,6 +171,10 @@ def main():
                        help = 'attention layer dimension')
     parser.add_argument('--pad_idx', default = None, type = int, required = True,
                        help = 'pad token index')  
+    parser.add_argument('--T_s', default = None, type = float, required = True,
+                       help = 'Desired % of seleted facts per case')
+    parser.add_argument('--lambda_s', default = None, type = float, required = True,
+                       help = 'Coefficient sparsity loss')
     parser.add_argument('--save_final_model', default = None, type = str, required = True,
                        help = 'final .pt model is saved in output folder')
     parser.add_argument('--save_model_steps', default = None, type = str, required = True,
@@ -186,8 +205,8 @@ def main():
 
     # Train dev test sets load
     print('Loading data')
-    model_train = pd.read_pickle(path_model_train)      #[0:80] #Toy
-    model_dev = pd.read_pickle(path_model_dev)          #[0:80] #Toy   
+    model_train = pd.read_pickle(path_model_train)      [0:80] #Toy
+    model_dev = pd.read_pickle(path_model_dev)          [0:80] #Toy   
     print('Done')
    
     # Instantiate dataclasses
@@ -277,6 +296,7 @@ def main():
     model_params = {'input_dir': args.input_dir,
                     'n_epochs': args.n_epochs,
                     'batch_size': args.batch_size,
+                    'shuffle_train': args.shuffle_train,
                     'learning_rate': args.lr,
                     'wd': args.wd,
                     'dropout': args.dropout,
@@ -287,6 +307,8 @@ def main():
                     'hidden_dim': args.hidden_dim,
                     'max_n_pars': args.max_n_pars,
                     'pad_idx': args.pad_idx,
+                    'T_s': args.T_s,
+                    'lambda_s': args.lambda_s,
                     'save_final_model': args.save_final_model,
                     'save_model_steps': args.save_model_steps,
                     'use_cuda': args.use_cuda,

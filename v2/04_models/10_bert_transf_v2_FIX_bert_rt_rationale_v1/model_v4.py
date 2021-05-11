@@ -129,14 +129,14 @@ class ECHR2_model(nn.Module):
         x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 1
         x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 1
         x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 1
-        x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 1
+        x_Q = self.drops(x_Q).squeeze(2)                                # batch_size x max_n_pars
         # Mask generation
         if mode == 'train':
             mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
-                                    hard = False)                       # batch_size x max_n_pars x 1
+                                    hard = True)                       # batch_size x max_n_pars
         else:
             mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
-                                    hard = True)                        # batch_size x max_n_pars x 1
+                                    hard = True)                        # batch_size x max_n_pars
 
         # ENCODER
         # Projection into K-space
@@ -146,6 +146,7 @@ class ECHR2_model(nn.Module):
         x_K = self.drops(x_K)                                           # batch_size x max_n_pars x h_dim
         
         # MASKING
+        mask = mask.unsqueeze(2)                                        # batch_size x max_n_pars x 1
         x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
                
         # MULTI-LABEL CLASSIFIER
@@ -153,4 +154,4 @@ class ECHR2_model(nn.Module):
         x = self.bn_out(x)                                              # batch_size x (max_n_pars x h_dim)
         x = self.sigmoid(self.fc_out(x))                                # batch_size x n_labels
 
-        return x
+        return x, mask
