@@ -41,7 +41,7 @@ class ECHR2_model(nn.Module):
         self.n_labels = args.num_labels
         self.seq_len = args.seq_len
         self.dropout = args.dropout
-        self.gumbel_temp = 1           #!!!
+        self.gumbel_temp = args.gumbel_temp
                      
         # Bert layer
         self.model_name = 'nlpaueb/legal-bert-small-uncased'

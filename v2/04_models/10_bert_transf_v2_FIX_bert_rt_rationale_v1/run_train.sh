@@ -4,11 +4,11 @@
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
 OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/16_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v1
 
-python -m ipdb train_###.py \
+python train_###.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
-    --n_epochs=2 \
-    --batch_size=4 \
+    --n_epochs=20\
+    --batch_size=40 \
     --shuffle_train=True \
     --lr=2e-5 \
     --wd=1e-6 \
@@ -21,12 +21,13 @@ python -m ipdb train_###.py \
     --hidden_dim=512 \
     --max_n_pars=50 \
     --pad_idx=0 \
+    --gumbel_temp=1 \
     --T_s=0.3 \
     --lambda_s=0.1 \
     --save_final_model=True \
     --save_model_steps=True \
     --use_cuda=True \
-    --gpu_ids=0
+    --gpu_ids=0,1,2,3,4,5,6,7
 
 #read -p 'EOF'
 

@@ -49,8 +49,8 @@ def train_epoch_f(args, epoch, model, criterion,
         loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
         loss = loss_classification + args.lambda_s * loss_sparsity
 
-        print(f'\nSparsity loss = {loss_sparsity}')
-        print(f'Mask = {mask}')
+#        print(f'\nSparsity loss = {loss_sparsity}')
+#        print(f'Mask = {mask}')
  
         # Backpropagate
         loss.backward()
@@ -170,7 +170,9 @@ def main():
     parser.add_argument('--max_n_pars', default = None, type = int, required = True,
                        help = 'attention layer dimension')
     parser.add_argument('--pad_idx', default = None, type = int, required = True,
-                       help = 'pad token index')  
+                       help = 'pad token index')      
+    parser.add_argument('--gumbel_temp', default = None, type = float, required = True,
+                       help = 'Gumbel temperature')
     parser.add_argument('--T_s', default = None, type = float, required = True,
                        help = 'Desired % of seleted facts per case')
     parser.add_argument('--lambda_s', default = None, type = float, required = True,
@@ -205,8 +207,8 @@ def main():
 
     # Train dev test sets load
     print('Loading data')
-    model_train = pd.read_pickle(path_model_train)      [0:80] #Toy
-    model_dev = pd.read_pickle(path_model_dev)          [0:80] #Toy   
+    model_train = pd.read_pickle(path_model_train)      #[0:80] #Toy
+    model_dev = pd.read_pickle(path_model_dev)          #[0:80] #Toy   
     print('Done')
    
     # Instantiate dataclasses
@@ -307,6 +309,7 @@ def main():
                     'hidden_dim': args.hidden_dim,
                     'max_n_pars': args.max_n_pars,
                     'pad_idx': args.pad_idx,
+                    'gumbel_temp': args.gumbel_temp,
                     'T_s': args.T_s,
                     'lambda_s': args.lambda_s,
                     'save_final_model': args.save_final_model,
