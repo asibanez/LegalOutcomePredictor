@@ -60,7 +60,7 @@ class ECHR2_model(nn.Module):
     
         # Fully connected Q
         self.fc_Q = nn.Linear(in_features = self.h_dim,
-                              out_features = 1)
+                              out_features = 2)
         
         # Fully connected output
         self.fc_out = nn.Linear(in_features = self.max_n_pars*self.h_dim,
@@ -126,17 +126,27 @@ class ECHR2_model(nn.Module):
         
         # GENERATOR
         # Projection into Q-space
-        x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 1
-        x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 1
-        x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 1
-        x_Q = self.drops(x_Q).squeeze(2)                                # batch_size x max_n_pars
+        x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 2
+        x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
+        x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 2
+        x_Q = self.drops(x_Q).squeeze(2)                                # batch_size x max_n_pars x 2
         # Mask generation
-        if mode == 'train':
+        mask_dict = {}
+        for idx in range(0, self.max_n_pars):
+            input_n = x_Q[:, idx, :]                                    # batch_size x 2
+            mask_n = F.gumbel_softmax(input_n, tau = self.gumbel_temp,
+                                      hard = True)                      # batch_size x 2
+            mask_n = mask_n[:, 0]                                       # batch_size x 1
+            mask_dict[idx] = mask_n                                     # batch_size x 1
+            
+        mask = torch.cat(list(mask_dict.values()), dim = 1)             # batch_size x max_n_pars
+        
+        """if mode == 'train':
             mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
                                     hard = True)                       # batch_size x max_n_pars
         else:
             mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
-                                    hard = True)                        # batch_size x max_n_pars
+                                    hard = True)                        # batch_size x max_n_pars"""
 
         # ENCODER
         # Projection into K-space
