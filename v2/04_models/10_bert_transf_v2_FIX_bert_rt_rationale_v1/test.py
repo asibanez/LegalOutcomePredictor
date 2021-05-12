@@ -55,7 +55,8 @@ def test_f(args):
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
+            pred_batch_score, mask = model(X_facts_ids,
+                                           X_facts_token_types, X_facts_attn_masks, mode)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
@@ -91,6 +92,8 @@ def main():
                        help = 'maximum number of paragraphs considered')
     parser.add_argument('--pad_idx', default = None, type = int, required = True,
                        help = 'pad token index')  
+    parser.add_argument('--gumbel_temp', default = None, type = float, required = True,
+                       help = 'Gumbel temperature')
     parser.add_argument('--gpu_id', default = None, type = int, required = True,
                        help = 'gpu id for testing')
     args = parser.parse_args()
