@@ -15,6 +15,9 @@ python test.py \
     --hidden_dim=512 \
     --max_n_pars=50 \
     --pad_idx=0 \
+    --gumbel_temp=1 \
+    --T_s=0.3 \
+    --lambda_s=0.1 \
     --gpu_id=0
 
 #read -p 'EOF'
