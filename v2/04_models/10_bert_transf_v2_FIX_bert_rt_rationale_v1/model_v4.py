@@ -73,7 +73,7 @@ class ECHR2_model(nn.Module):
         self.drops = nn.Dropout(self.dropout)
            
         # Batch normalizations
-        self.bn_Q = nn.BatchNorm1d(1)
+        self.bn_Q = nn.BatchNorm1d(2)
         self.bn_K = nn.BatchNorm1d(self.h_dim)
         self.bn_out = nn.BatchNorm1d(self.max_n_pars*self.h_dim)
 
@@ -136,18 +136,11 @@ class ECHR2_model(nn.Module):
             input_n = x_Q[:, idx, :]                                    # batch_size x 2
             mask_n = F.gumbel_softmax(input_n, tau = self.gumbel_temp,
                                       hard = True)                      # batch_size x 2
-            mask_n = mask_n[:, 0]                                       # batch_size x 1
+            mask_n = mask_n[:, 0].unsqueeze(1)                          # batch_size x 1
             mask_dict[idx] = mask_n                                     # batch_size x 1
             
         mask = torch.cat(list(mask_dict.values()), dim = 1)             # batch_size x max_n_pars
         
-        """if mode == 'train':
-            mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
-                                    hard = True)                       # batch_size x max_n_pars
-        else:
-            mask = F.gumbel_softmax(x_Q, tau = self.gumbel_temp,
-                                    hard = True)                        # batch_size x max_n_pars"""
-
         # ENCODER
         # Projection into K-space
         x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
