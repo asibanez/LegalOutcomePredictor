@@ -38,15 +38,12 @@ for idx in range (0,1000):
     print(output)
 print(sum_a, sum_b)
 
-
 #%%
 logits = torch.Tensor([1, 0.1, 0])
 
-#%%
 logits = logits.repeat(2,1)
 logits = logits.unsqueeze(2)
 
-#%%
 print(f'logits = {logits}')
 output = F.gumbel_softmax(logits, tau=100, hard=False)
 print(output)
