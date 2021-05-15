@@ -129,7 +129,7 @@ class ECHR2_model(nn.Module):
         x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 2
         x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
         x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 2
-        x_Q = self.drops(x_Q).squeeze(2)                                # batch_size x max_n_pars x 2
+        x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 2
         # Mask generation
         mask_dict = {}
         for idx in range(0, self.max_n_pars):

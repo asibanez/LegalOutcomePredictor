@@ -60,6 +60,7 @@ def test_f(args):
                                            X_facts_token_types,
                                            X_facts_attn_masks, mode)
 
+        mask = mask.squeeze(2)
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
         Y_predicted_binary.append(pred_batch_binary)

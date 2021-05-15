@@ -2,12 +2,12 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
-WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/15_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v1
+WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/17_BERT_TRANSF_v2_FIX_50par_10ep_rationale_v1_TEST_DELETE
 
-python test.py \
+python test_v2.py \
     --input_dir=$INPUT_DIR \
     --work_dir=$WORK_DIR \
-    --test_file=model_train.pkl \
+    --test_file=model_dev.pkl \
     --batch_size=1000 \
     --seq_len=256 \
     --num_labels=33 \
