@@ -18,7 +18,7 @@ print(a,b,c)
 
 #%%
 
-logits = torch.Tensor([0.3, 0.3])
+logits = torch.Tensor([-500, 500])
 
 a, b, = 0, 0
 
