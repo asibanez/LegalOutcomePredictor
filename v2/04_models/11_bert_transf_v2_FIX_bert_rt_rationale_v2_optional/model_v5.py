@@ -1,6 +1,7 @@
 # v2 -> Tries to use stacked tensors
 # v3 -> Uses flat tensors
 # v4 -> Decopuled from train
+# v5 -> Includes masking for padding
 
 # Imports
 import numpy as np
@@ -82,13 +83,13 @@ class ECHR2_model(nn.Module):
         batch_size = X_facts_ids.size()[0]
         device = X_facts_ids.get_device()
         empty_par_ids = torch.cat([torch.tensor([101,102]),
-                                   torch.zeros(self.seq_len-2)]).long()     # seq_len
-        empty_par_ids = empty_par_ids.repeat(batch_size, 1).to(device)      # batch_size x seq_len
+                                   torch.zeros(self.seq_len-2)]).long() # seq_len
+        empty_par_ids = empty_par_ids.repeat(batch_size, 1).to(device)  # batch_size x seq_len
 
         # BERT PARAGRAPH ENCODER & Transfomer masks generation
         bert_out = {}
         transf_mask = torch.zeros((batch_size,
-                                   self.max_n_pars), dtype=torch.bool)      # batch_size x max_n_pars
+                                   self.max_n_pars), dtype=torch.bool)  # batch_size x max_n_pars
         
         #for idx in tqdm(range(0, self.max_n_pars), desc = 'Iterating through paragraphs'):
         for idx in range(0, self.max_n_pars):
@@ -97,7 +98,7 @@ class ECHR2_model(nn.Module):
             
             # Slice sequence
             facts_ids = X_facts_ids[:, span_b:span_e]                       # batch_size x seq_len
-#            facts_token_types = X_facts_token_types[:, span_b:span_e]       # batch_size x seq_len
+            facts_token_types = X_facts_token_types[:, span_b:span_e]       # batch_size x seq_len
             facts_attn_masks = X_facts_attn_masks[:, span_b:span_e]         # batch_size x seq_len
             
             # Generate masks for transformer
@@ -123,17 +124,15 @@ class ECHR2_model(nn.Module):
         x = self.transf_enc(x, src_key_padding_mask = transf_mask)          # max_n_pars x batch_size x h_dim
         x = self.drops(x)                                                   # max_n_pars x batch_size x h_dim
         x = x.transpose(0, 1)                                               # batch_size x max_n_pars x h_dim
-        
-        # GENERATE RATIONALES
+
         if eval(args.rationales) == True:
-        
             # GENERATOR
             # Projection into Q-space
             x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 2
             x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
             x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 2
             x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 2
-            # Mask generation
+            # Rationale mask generation
             mask_dict = {}
             for idx in range(0, self.max_n_pars):
                 input_n = x_Q[:, idx, :]                                    # batch_size x 2
@@ -143,7 +142,9 @@ class ECHR2_model(nn.Module):
                 mask_dict[idx] = mask_n                                     # batch_size x 1
                 
             mask = torch.cat(list(mask_dict.values()), dim = 1)             # batch_size x max_n_pars
-            
+            # Rationales mask masking with padiing mask
+            mask_pad = torch.where(transf_mask == True, 0, mask.long())     # batch_size x max_n_pars
+    
             # ENCODER
             # Projection into K-space
             x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
@@ -152,16 +153,16 @@ class ECHR2_model(nn.Module):
             x_K = self.drops(x_K)                                           # batch_size x max_n_pars x h_dim
             
             # MASKING
-            mask = mask.unsqueeze(2)                                        # batch_size x max_n_pars x 1
-            x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
-            mask = mask.squeeze(2)                                          # batch_size x max_n_pars
+            mask_pad = mask_pad.unsqueeze(2)                                # batch_size x max_n_pars x 1
+            x = x_K * mask_pad                                              # batch_size x max_n_pars x h_dim
+            mask_pad = mask_pad.squeeze(2)                                  # batch_size x max_n_pars x 1
             
         else:
-            mask = torch.zeros(1).to(device)                                # 1
+            mask_pad = torch.Tensor([0])
                
         # MULTI-LABEL CLASSIFIER
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                       # batch_size x (max_n_pars x h_dim)
         x = self.bn_out(x)                                                  # batch_size x (max_n_pars x h_dim)
         x = self.sigmoid(self.fc_out(x))                                    # batch_size x n_labels
 
-        return x, mask
+        return x, mask_pad

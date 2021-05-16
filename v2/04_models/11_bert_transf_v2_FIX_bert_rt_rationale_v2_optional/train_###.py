@@ -12,7 +12,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from model_v4 import ECHR2_dataset, ECHR2_model
+from model_v5 import ECHR2_dataset, ECHR2_model
 
 #%% Train function
 
@@ -24,7 +24,6 @@ def train_epoch_f(args, epoch, model, criterion,
     sum_correct = {x:0 for x in range (0,args.num_labels)}
     total_entries = 0
     sum_train_loss = 0
-    mode = 'train'
     
     for step_idx, (X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels) in \
         tqdm(enumerate(train_dl), total = len(train_dl), desc = 'Training epoch'):
@@ -40,15 +39,16 @@ def train_epoch_f(args, epoch, model, criterion,
         optimizer.zero_grad()
         
         #Forward
-        pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
+        pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, args)
         
         # Compute loss
-        mask = mask.squeeze(2)
         loss_classification = criterion(pred, Y_labels)
-        #loss_sparsity = torch.mean(torch.sum(mask, dim = 1)) 
-        loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
+        if eval(args.rationales) == True:
+            loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] *\
+                                                 torch.sum(mask, dim = 1)))
+        else:
+            loss_sparsity = 0
         loss = loss_classification + args.lambda_s * loss_sparsity
-
 #        print(f'\nSparsity loss = {loss_sparsity}')
 #        print(f'Mask = {mask}')
  
@@ -106,16 +106,17 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
                     
         # Compute predictions:
         with torch.no_grad():
-            pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
+            pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, args)
 
         # Compute loss
         loss_classification = criterion(pred, Y_labels)
-        if eval(args.rationales) == True: 
-            loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
+        if eval(args.rationales) == True:
+            loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] *\
+                                                 torch.sum(mask, dim = 1)))
         else:
             loss_sparsity = 0
         loss = loss_classification + args.lambda_s * loss_sparsity
-        
+                
         # Book-keeping
         current_batch_size = X_facts_ids.size()[0]
         total_entries += current_batch_size
@@ -150,6 +151,10 @@ def main():
                        help = 'train batch size')
     parser.add_argument('--shuffle_train', default = None, type = str, required = True,
                        help = 'shuffle train set')
+    parser.add_argument('--train_toy_data', default = None, type = str, required = True,
+                       help = 'Use toy dataset for training')
+    parser.add_argument('--len_train_toy_data', default = None, type = int, required = True,
+                       help = 'train toy data size')
     parser.add_argument('--lr', default = None, type = float, required = True,
                        help = 'learning rate')
     parser.add_argument('--wd', default = None, type = float, required = True,
@@ -173,7 +178,7 @@ def main():
     parser.add_argument('--pad_idx', default = None, type = int, required = True,
                        help = 'pad token index')      
     parser.add_argument('--rationales', default = None, type = str, required = True,
-                        help = 'extract rationales')
+                        help = 'extract rationales')    
     parser.add_argument('--gumbel_temp', default = None, type = float, required = True,
                        help = 'Gumbel temperature')
     parser.add_argument('--T_s', default = None, type = float, required = True,
@@ -213,7 +218,11 @@ def main():
     model_train = pd.read_pickle(path_model_train)      #[0:80] #Toy
     model_dev = pd.read_pickle(path_model_dev)          #[0:80] #Toy   
     print('Done')
-   
+ 
+    if eval(args.train_toy_data) == True:
+        model_train = model_train[0:args.len_train_toy_data]
+        model_dev = model_dev[0:args.len_train_toy_data]
+  
     # Instantiate dataclasses
     train_dataset = ECHR2_dataset(model_train)
     dev_dataset = ECHR2_dataset(model_dev)
@@ -271,7 +280,7 @@ def main():
         val_acc_history.append(val_acc) 
 
 #####
-        if eval(args.save_model_steps) == True and epoch%4 == 0:
+        if eval(args.save_model_steps) == True and epoch%2 == 0:
 #####
             if len(args.gpu_ids) > 1 and eval(args.use_cuda) == True:
                 torch.save(model.module.state_dict(), output_path_model + '.' + str(epoch))

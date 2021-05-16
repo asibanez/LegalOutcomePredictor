@@ -12,7 +12,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import classification_report
-from model_v4 import ECHR2_dataset, ECHR2_model
+from model_v5 import ECHR2_dataset, ECHR2_model
 
 # Test function
 def test_f(args):
@@ -42,6 +42,7 @@ def test_f(args):
     # Test procedure
     Y_predicted_score = []
     Y_predicted_binary = []
+    Y_predicted_rationale = []
     Y_ground_truth = []
 
     for X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels in \
@@ -55,18 +56,22 @@ def test_f(args):
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
+            pred_batch_score, mask = model(X_facts_ids,
+                                           X_facts_token_types,
+                                           X_facts_attn_masks, mode)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
         Y_predicted_binary.append(pred_batch_binary)
+        Y_predicted_rationale.append(mask)
         Y_ground_truth.append(Y_labels)
 
     Y_predicted_score = torch.cat(Y_predicted_score, dim = 0).cpu()
     Y_predicted_binary = torch.cat(Y_predicted_binary, dim = 0).cpu()
+    Y_predicted_rationale = torch.cat(Y_predicted_rationale, dim = 0).cpu()
     Y_ground_truth = torch.cat(Y_ground_truth, dim = 0).cpu()
             
-    return Y_predicted_score, Y_predicted_binary, Y_ground_truth
+    return Y_predicted_score, Y_predicted_binary, Y_predicted_rationale, Y_ground_truth
             
 def main():
     # Argument parsing
@@ -91,6 +96,14 @@ def main():
                        help = 'maximum number of paragraphs considered')
     parser.add_argument('--pad_idx', default = None, type = int, required = True,
                        help = 'pad token index')  
+    parser.add_argument('--rationales', default = None, type = str, required = True,
+                        help = 'extract rationales')    
+    parser.add_argument('--gumbel_temp', default = None, type = float, required = True,
+                       help = 'Gumbel temperature')
+    parser.add_argument('--T_s', default = None, type = float, required = True,
+                       help = 'Desired % of seleted facts per case')
+    parser.add_argument('--lambda_s', default = None, type = float, required = True,
+                       help = 'Coefficient sparsity loss')
     parser.add_argument('--gpu_id', default = None, type = int, required = True,
                        help = 'gpu id for testing')
     args = parser.parse_args()
@@ -105,7 +118,8 @@ def main():
     args.path_results_full = os.path.join(args.work_dir, output_file)
     
     # Compute predictions
-    Y_predicted_score, Y_predicted_binary, Y_ground_truth = test_f(args)
+    Y_predicted_score, Y_predicted_binary, Y_predicted_rationale, Y_ground_truth\
+        = test_f(args)
     
     # Compute and print metrics
     print(classification_report(Y_ground_truth, Y_predicted_binary))
@@ -117,6 +131,7 @@ def main():
     results['Y_test_ground_truth'] = Y_ground_truth.numpy().tolist()
     results['Y_test_prediction_scores'] = Y_predicted_score.numpy().tolist()
     results['Y_test_prediction_binary'] = Y_predicted_binary.numpy().tolist()
+    results['Y_test_prediction_rationale'] = Y_predicted_rationale.numpy().tolist()
     
     # Save metrics
     with open(args.path_results_full, 'w') as fw:
