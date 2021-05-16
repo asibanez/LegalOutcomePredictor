@@ -12,7 +12,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from model_v4 import ECHR2_dataset, ECHR2_model
+from model_v5 import ECHR2_dataset, ECHR2_model
 
 #%% Train function
 
@@ -43,7 +43,6 @@ def train_epoch_f(args, epoch, model, criterion,
         pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
         
         # Compute loss
-        mask = mask.squeeze(2)
         loss_classification = criterion(pred, Y_labels)
         #loss_sparsity = torch.mean(torch.sum(mask, dim = 1)) 
         loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
@@ -109,7 +108,6 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
             pred, mask = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks, mode)
 
         # Compute loss
-        mask = mask.squeeze(2)
         loss_classification = criterion(pred, Y_labels)
         #loss_sparsity = torch.mean(torch.sum(mask, dim = 1)) 
         loss_sparsity = torch.mean(torch.abs(args.T_s - 1/mask.size()[1] * torch.sum(mask, dim = 1)))
@@ -149,6 +147,10 @@ def main():
                        help = 'train batch size')
     parser.add_argument('--shuffle_train', default = None, type = str, required = True,
                        help = 'shuffle train set')
+    parser.add_argument('--train_toy_data', default = None, type = str, required = True,
+                       help = 'Use toy dataset for training')
+    parser.add_argument('--len_train_toy_data', default = None, type = int, required = True,
+                       help = 'train toy data size')
     parser.add_argument('--lr', default = None, type = float, required = True,
                        help = 'learning rate')
     parser.add_argument('--wd', default = None, type = float, required = True,
@@ -210,7 +212,11 @@ def main():
     model_train = pd.read_pickle(path_model_train)      #[0:80] #Toy
     model_dev = pd.read_pickle(path_model_dev)          #[0:80] #Toy   
     print('Done')
-   
+ 
+    if eval(args.train_toy_data) == True:
+        model_train = model_train[0:args.len_train_toy_data]
+        model_dev = model_dev[0:args.len_train_toy_data]
+  
     # Instantiate dataclasses
     train_dataset = ECHR2_dataset(model_train)
     dev_dataset = ECHR2_dataset(model_dev)
@@ -268,7 +274,7 @@ def main():
         val_acc_history.append(val_acc) 
 
 #####
-        if eval(args.save_model_steps) == True and epoch%4 == 0:
+        if eval(args.save_model_steps) == True and epoch%2 == 0:
 #####
             if len(args.gpu_ids) > 1 and eval(args.use_cuda) == True:
                 torch.save(model.module.state_dict(), output_path_model + '.' + str(epoch))

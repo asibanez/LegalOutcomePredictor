@@ -151,6 +151,7 @@ class ECHR2_model(nn.Module):
         # MASKING
         mask = mask.unsqueeze(2)                                        # batch_size x max_n_pars x 1
         x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
+        mask = mask.squeeze(2)                                          # batch_size x max_n_pars
                
         # MULTI-LABEL CLASSIFIER
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                   # batch_size x (max_n_pars x h_dim)

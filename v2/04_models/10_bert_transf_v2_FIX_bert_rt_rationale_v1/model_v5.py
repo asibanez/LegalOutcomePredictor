@@ -131,7 +131,7 @@ class ECHR2_model(nn.Module):
         x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
         x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 2
         x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 2
-        # Mask generation
+        # Rationale mask generation
         mask_dict = {}
         for idx in range(0, self.max_n_pars):
             input_n = x_Q[:, idx, :]                                    # batch_size x 2
@@ -141,7 +141,9 @@ class ECHR2_model(nn.Module):
             mask_dict[idx] = mask_n                                     # batch_size x 1
             
         mask = torch.cat(list(mask_dict.values()), dim = 1)             # batch_size x max_n_pars
-        
+        # Rationales mask masking with padiing mask
+        mask_pad = torch.where(transf_mask == True, 0, mask.long())     # batch_size x max_n_pars
+
         # ENCODER
         # Projection into K-space
         x_K = self.fc_K(x)                                              # batch_size x max_n_pars x h_dim
@@ -150,12 +152,13 @@ class ECHR2_model(nn.Module):
         x_K = self.drops(x_K)                                           # batch_size x max_n_pars x h_dim
         
         # MASKING
-        mask = mask.unsqueeze(2)                                        # batch_size x max_n_pars x 1
-        x = x_K * mask                                                  # batch_size x max_n_pars x h_dim
+        mask_pad = mask_pad.unsqueeze(2)                                # batch_size x max_n_pars x 1
+        x = x_K * mask_pad                                              # batch_size x max_n_pars x h_dim
+        mask_pad = mask_pad.squeeze(2)                                  # batch_size x max_n_pars x 1
                
         # MULTI-LABEL CLASSIFIER
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                   # batch_size x (max_n_pars x h_dim)
         x = self.bn_out(x)                                              # batch_size x (max_n_pars x h_dim)
         x = self.sigmoid(self.fc_out(x))                                # batch_size x n_labels
 
-        return x, mask
+        return x, mask_pad

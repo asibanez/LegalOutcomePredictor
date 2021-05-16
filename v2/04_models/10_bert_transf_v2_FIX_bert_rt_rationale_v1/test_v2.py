@@ -12,7 +12,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import classification_report
-from model_v4 import ECHR2_dataset, ECHR2_model
+from model_v5 import ECHR2_dataset, ECHR2_model
 
 # Test function
 def test_f(args):
@@ -60,7 +60,6 @@ def test_f(args):
                                            X_facts_token_types,
                                            X_facts_attn_masks, mode)
 
-        mask = mask.squeeze(2)
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
         Y_predicted_binary.append(pred_batch_binary)
