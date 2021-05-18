@@ -129,9 +129,9 @@ class ECHR2_model(nn.Module):
             # GENERATOR
             # Projection into Q-space
             x_Q = self.fc_Q(x)                                              # batch_size x max_n_pars x 2
-            x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
+            #x_Q = torch.transpose(self.bn_Q(torch.transpose(x_Q,1,2)),1,2)  # batch_size x max_n_pars x 2
             x_Q = F.relu(x_Q)                                               # batch_size x max_n_pars x 2
-            x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 2
+            #x_Q = self.drops(x_Q)                                           # batch_size x max_n_pars x 2
             # Rationale mask generation
             mask_dict = {}
             for idx in range(0, self.max_n_pars):
@@ -143,7 +143,8 @@ class ECHR2_model(nn.Module):
                 
             mask = torch.cat(list(mask_dict.values()), dim = 1)             # batch_size x max_n_pars
             # Rationales mask masking with padiing mask
-            mask_pad = torch.where(transf_mask == True, 0, mask.long())     # batch_size x max_n_pars
+#            mask_pad = torch.where(transf_mask == True, 0, mask.long())     # batch_size x max_n_pars
+            mask_pad = mask
     
             # ENCODER
             # Projection into K-space
@@ -158,7 +159,7 @@ class ECHR2_model(nn.Module):
             mask_pad = mask_pad.squeeze(2)                                  # batch_size x max_n_pars x 1
             
         else:
-            mask_pad = torch.Tensor([0])
+            mask_pad = torch.Tensor([0]).to(device)
                
         # MULTI-LABEL CLASSIFIER
         x = x.reshape(-1, self.max_n_pars*self.h_dim)                       # batch_size x (max_n_pars x h_dim)

@@ -116,6 +116,7 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
         else:
             loss_sparsity = 0
         loss = loss_classification + args.lambda_s * loss_sparsity
+        print(args.lambda_s*loss_sparsity)
                 
         # Book-keeping
         current_batch_size = X_facts_ids.size()[0]

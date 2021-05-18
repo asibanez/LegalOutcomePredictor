@@ -58,7 +58,7 @@ def test_f(args):
         with torch.no_grad():
             pred_batch_score, mask = model(X_facts_ids,
                                            X_facts_token_types,
-                                           X_facts_attn_masks, mode)
+                                           X_facts_attn_masks, args)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)

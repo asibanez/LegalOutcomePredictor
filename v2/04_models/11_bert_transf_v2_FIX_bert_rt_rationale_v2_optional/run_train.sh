@@ -2,16 +2,16 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/18_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v1_TEST_DELETE
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/22_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v2_TEST_DELETE_mod_v5_rationale_null_lambda_temp_10_no_drops_no_bn
 
 python train_###.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
     --n_epochs=20 \
-    --batch_size=70 \
+    --batch_size=80 \
     --shuffle_train=True \
     --train_toy_data=False \
-    --len_train_toy_data=80 \
+    --len_train_toy_data=70 \
     --lr=2e-5 \
     --wd=1e-6 \
     --dropout=0.4 \
@@ -23,8 +23,8 @@ python train_###.py \
     --hidden_dim=512 \
     --max_n_pars=50 \
     --pad_idx=0 \
-    --rationales=True
-    --gumbel_temp=1 \
+    --rationales=True \
+    --gumbel_temp=10 \
     --T_s=0.3 \
     --lambda_s=0 \
     --save_final_model=True \
