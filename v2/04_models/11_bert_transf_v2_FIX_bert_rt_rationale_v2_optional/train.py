@@ -116,7 +116,6 @@ def val_epoch_f(args, model, criterion, dev_dl, device):
         else:
             loss_sparsity = 0
         loss = loss_classification + args.lambda_s * loss_sparsity
-        print(args.lambda_s*loss_sparsity)
                 
         # Book-keeping
         current_batch_size = X_facts_ids.size()[0]
@@ -190,6 +189,8 @@ def main():
                        help = 'final .pt model is saved in output folder')
     parser.add_argument('--save_model_steps', default = None, type = str, required = True,
                        help = 'intermediate .pt models saved in output folder')
+    parser.add_argument('--save_step_cliff', default = None, type = int, required = True,
+                       help = 'start saving models after cliff')      
     parser.add_argument('--use_cuda', default = None, type = str, required = True,
                         help = 'use CUDA')
     parser.add_argument('--gpu_ids', default = None, type = str, required = True,
@@ -280,9 +281,8 @@ def main():
         val_loss_history.append(val_loss)
         val_acc_history.append(val_acc) 
 
-#####
-        if eval(args.save_model_steps) == True and epoch%2 == 0:
-#####
+        if eval(args.save_model_steps) == True and epoch >= args.save_step_cliff:
+
             if len(args.gpu_ids) > 1 and eval(args.use_cuda) == True:
                 torch.save(model.module.state_dict(), output_path_model + '.' + str(epoch))
             else:
