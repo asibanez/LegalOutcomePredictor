@@ -7,7 +7,7 @@ OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/25_
 python train.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
-    --n_epochs=30 \
+    --n_epochs=40 \
     --batch_size=80 \
     --shuffle_train=True \
     --train_toy_data=False \

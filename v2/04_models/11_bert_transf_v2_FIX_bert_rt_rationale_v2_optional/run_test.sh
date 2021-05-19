@@ -2,7 +2,7 @@
 #OUTPUT_DIR=C:\\Users\\siban\\Dropbox\\CSAIL\\Projects\\12_Legal_Outcome_Predictor\\00_data\\v2\\02_runs\\00_TEST_DELETE
 
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
-WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/24_BERT_TRANSF_v2_FIX_50par_30ep_rationale_v2_mod_v6_rationale_null_lambda_temp_10_no_drops
+WORK_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/25_BERT_TRANSF_v2_FIX_50par_30ep_rationale_v2_mod_v6_rationale_temp_10_no_bn
 
 python test_v2.py \
     --input_dir=$INPUT_DIR \
@@ -18,7 +18,7 @@ python test_v2.py \
     --rationales=True \
     --gumbel_temp=10 \
     --T_s=0.3 \
-    --lambda_s=0 \
+    --lambda_s=0.1 \
     --gpu_id=0
 
 #read -p 'EOF'
