@@ -27,7 +27,9 @@ def compute_metrics(Y_ground_truth, Y_pred_binary, Y_pred_score):
     return precision, recall, f1, auc
 
 #%% Path definitions
-base_path_run = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/18_BERT_TRANSF_v2_FIX_50par_20ep_rationale_v1_TEST_DELETE'
+base_path_run = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/24_BERT_TRANSF_v2_FIX_50par_30ep_rationale_v2_mod_v6_rationale_null_lambda_temp_10_no_drops'
+
+#%% Path raw data
 path_raw = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full'
 
 #%% Global initialization
@@ -68,7 +70,7 @@ tgt_labels = ['2',
               'P12-1']
 
 #%% Define data path
-results_path = os.path.join(base_path_run, 'full_results_model_dev.json')
+results_path = os.path.join(base_path_run, 'full_results_model_train.json')
 
 #%% Load datasets
 with open(results_path) as fr:
@@ -124,7 +126,3 @@ print(f'Average number of rationales after cleaning = {avg_num_rationales}')
 
 
 
-
-
-
-"""
