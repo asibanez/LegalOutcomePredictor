@@ -217,8 +217,8 @@ def main():
 
     # Train dev test sets load
     print('Loading data')
-    model_train = pd.read_pickle(path_model_train)      #[0:80] #Toy
-    model_dev = pd.read_pickle(path_model_dev)          #[0:80] #Toy   
+    model_train = pd.read_pickle(path_model_train)
+    model_dev = pd.read_pickle(path_model_dev)
     print('Done')
  
     if eval(args.train_toy_data) == True:

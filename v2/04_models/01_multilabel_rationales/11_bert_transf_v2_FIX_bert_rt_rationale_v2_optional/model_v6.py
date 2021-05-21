@@ -140,7 +140,7 @@ class ECHR2_model(nn.Module):
                                     hard = True)                            # batch_size x max_n_pars x 2            
             mask = mask[:, :, 0]                                            # batch_size x max_n_pars
         
-            # Rationales mask masking with padiing mask
+            # Rationales mask masking with padding mask
 #            mask_pad = torch.where(transf_mask == True, 0, mask.long())     # batch_size x max_n_pars
             mask_pad = mask
     

@@ -65,10 +65,10 @@ echr_input_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predic
 output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
 #echr_input_path = '/data####'
 #output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full_binary'
-train_set_path = os.path.join(output_folder, 'model_train.pkl')
-val_set_path = os.path.join(output_folder, 'model_dev.pkl')
-test_set_path = os.path.join(output_folder, 'model_test.pkl')
-echr_set_path = os.path.join(output_folder, 'echr.pkl')
+output_train_set_path = os.path.join(output_folder, 'tokenized_train.pkl')
+output_val_set_path = os.path.join(output_folder, 'tokenized_dev.pkl')
+output_test_set_path = os.path.join(output_folder, 'tokenized_test.pkl')
+output_echr_set_path = os.path.join(output_folder, 'tokenized_echr.pkl')
 
 #%% Global initialization
 num_labels = 33
@@ -130,7 +130,7 @@ val_set_df = pd.DataFrame({'input_ids': val_input_ids,
                            'att_mask': val_attn_masks,
                            'labels': val_labels})
 
-test_set_df = pd.DataFrame({'ids': test_input_ids,
+test_set_df = pd.DataFrame({'input_ids': test_input_ids,
                             'token_type': test_token_type_ids,
                             'att_mask': test_attn_masks,
                             'labels': test_labels})
@@ -146,8 +146,8 @@ if not os.path.isdir(output_folder):
     print("Created folder : ", output_folder)
 
 print(f'Saving datasets to {output_folder}')
-train_set_df.to_pickle(train_set_path)
-val_set_df.to_pickle(val_set_path)
-test_set_df.to_pickle(test_set_path)
-echr_set_df.to_pickle(echr_set_path)
+train_set_df.to_pickle(output_train_set_path)
+val_set_df.to_pickle(output_val_set_path)
+test_set_df.to_pickle(output_test_set_path)
+echr_set_df.to_pickle(output_echr_set_path)
 print('Done')
