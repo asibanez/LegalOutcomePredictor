@@ -4,6 +4,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 from torch.utils.data import Dataset
 from transformers import AutoModel
 
@@ -78,9 +79,13 @@ class ECHR2_model(nn.Module):
         # Encode paragraphs - BERT & generate transfomers masks
         bert_out = {}
         transf_mask = torch.zeros((batch_size,
-                                   max_num_pars), dtype=torch.bool)     # batch_size x max_n_pars
+                                   max_num_pars),
+                                   dtype=torch.bool).to(device)         # batch_size x max_n_pars
         
-        for idx in range(0, max_num_pars):
+        #for idx in range(0, max_num_pars):
+        for idx in tqdm(range(0, max_num_pars),
+                        total = max_num_pars,
+                        desc = 'Iterating through paragraphs'):
             span_b = self.seq_len * idx
             span_e = self.seq_len * (idx + 1)
             
@@ -91,8 +96,7 @@ class ECHR2_model(nn.Module):
             
             # Generate masks for transformer
             equiv = torch.eq(ids, empty_par_ids)                        # batch_size x seq_len
-            equiv = equiv.all(dim = 1)                                  # batch_size
-            if device != -1: equiv = equiv.to(device)                   # batch_size
+            equiv = equiv.all(dim = 1)                                 # batch_size
             transf_mask[:, idx] = equiv                                 # batch_size
             
             # Generate input dict to bert model
@@ -124,10 +128,10 @@ class ECHR2_model(nn.Module):
         # Initialization
         batch_size = X_facts_ids.size()[0]
         device = X_facts_ids.get_device()
+        if device == -1: device = 'cpu'
         empty_par_ids = torch.cat([torch.tensor([101,102]),
                                    torch.zeros(self.seq_len-2)]).long() # seq_len
-        empty_par_ids = empty_par_ids.repeat(batch_size, 1)             # batch_size x seq_len
-        if device != -1: empty_par_ids = empty_par_ids.to(device)       # batch_size x seq_len
+        empty_par_ids = empty_par_ids.repeat(batch_size, 1).to(device)  # batch_size x seq_len
 
         # BERT paragraph encoding        
         x_facts, transf_mask_facts = self.BERT_encode_f(X_facts_ids,

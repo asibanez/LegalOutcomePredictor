@@ -21,7 +21,7 @@ def train_epoch_f(args, epoch, model, criterion,
                   output_train_log_file_path, device):
    
     model.train()
-    sum_correct = {x:0 for x in range (0,args.num_labels)}
+    sum_correct = 0
     total_entries = 0
     sum_train_loss = 0
     
@@ -82,7 +82,7 @@ def train_epoch_f(args, epoch, model, criterion,
 
 def val_epoch_f(args, model, criterion, dev_dl, device):
     model.eval()
-    sum_correct = {x:0 for x in range (0,args.num_labels)}
+    sum_correct = 0
     sum_val_loss = 0
     total_entries = 0
 
@@ -291,6 +291,9 @@ def main():
     model_params = {'input_dir': args.input_dir,
                     'n_epochs': args.n_epochs,
                     'batch_size': args.batch_size,
+                    'shuffle_train': args.shuffle_train, 
+                    'train_toy_data': args.train_toy_data,
+                    'len_train_toy_data': args.len_train_toy_data,
                     'learning_rate': args.lr,
                     'wd': args.wd,
                     'dropout': args.dropout,
@@ -299,10 +302,12 @@ def main():
                     'seq_len': args.seq_len,
                     'num_labels': args.num_labels,              
                     'hidden_dim': args.hidden_dim,
-                    'max_n_pars': args.max_n_pars,
+                    'max_n_pars_facts': args.max_n_pars_facts,
+                    'max_n_pars_echr': args.max_n_pars_echr,
                     'pad_idx': args.pad_idx,
                     'save_final_model': args.save_final_model,
                     'save_model_steps': args.save_model_steps,
+                    'save_step_cliff': args.save_step_cliff,
                     'use_cuda': args.use_cuda,
                     'gpu_ids': args.gpu_ids}
     

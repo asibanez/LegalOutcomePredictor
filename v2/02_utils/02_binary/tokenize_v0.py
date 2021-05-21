@@ -61,10 +61,10 @@ def tokenize_f(paragraphs, seq_len, max_n_pars):
     return input_id_list, token_type_id_list, attention_mask_list
 
 #%% Path definition
-echr_input_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/00_ECHR_law/01_parsed/ECHR_paragraphs_final_no_bullets.csv'
-output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
-#echr_input_path = '/data####'
-#output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full_binary'
+#echr_input_path = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/00_ECHR_law/01_parsed/ECHR_paragraphs_final_no_bullets.csv'
+#output_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
+echr_input_path = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/00_ECHR_law/01_parsed/ECHR_paragraphs_final_no_bullets.csv'
+output_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
 output_train_set_path = os.path.join(output_folder, 'tokenized_train.pkl')
 output_val_set_path = os.path.join(output_folder, 'tokenized_dev.pkl')
 output_test_set_path = os.path.join(output_folder, 'tokenized_test.pkl')

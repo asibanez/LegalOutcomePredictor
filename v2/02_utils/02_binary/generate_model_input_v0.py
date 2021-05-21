@@ -4,7 +4,8 @@ import pandas as pd
 from tqdm import tqdm
 
 #%% Path definition
-input_folder ='C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
+#input_folder = 'C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
+input_folder = '/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary'
 output_folder = input_folder
 
 path_input_train = os.path.join(input_folder, 'tokenized_train.pkl')
