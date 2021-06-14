@@ -10,7 +10,7 @@ python train.py \
     --n_epochs=300 \
     --batch_size=2000 \
     --shuffle_train=True \
-        --lr=2e-5 \
+    --lr=2e-5 \
     --wd=1e-6 \
     --dropout=0.4 \
     --momentum=0.9 \

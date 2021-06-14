@@ -4,7 +4,7 @@
 INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/01_full
 OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/12_BERT_TRANSF_v2_FIX_50par_20ep
 
-python train_###.py \
+python -m pdb train_###.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
     --n_epochs=20 \

@@ -73,6 +73,52 @@ class ECHR2_model(nn.Module):
         self.bn1 = nn.BatchNorm1d((self.max_n_pars_facts + \
                                    self.max_n_pars_echr)*self.h_dim)
 
+    def BERT_encode_f(self, X_ids, X_token_types, X_attn_masks,
+                      max_num_pars, batch_size, empty_par_ids, device):
+
+        # Encode paragraphs - BERT & generate transfomers masks
+        bert_out = {}
+        transf_mask = torch.zeros((batch_size,
+                                   max_num_pars),
+                                   dtype=torch.bool).to(device)         # batch_size x max_n_pars
+        
+        for idx in range(0, max_num_pars):
+            span_b = self.seq_len * idx
+            span_e = self.seq_len * (idx + 1)
+            
+            # Slice sequence
+            ids = X_ids[:, span_b:span_e]                               # batch_size x seq_len
+             #token_types = X_token_types[:, span_b:span_e]              # batch_size x seq_len
+            attn_masks = X_attn_masks[:, span_b:span_e]                 # batch_size x seq_len
+            
+            # Generate masks for transformer
+            equiv = torch.eq(ids, empty_par_ids)                        # batch_size x seq_len
+            equiv = equiv.all(dim = 1)                                 # batch_size
+            transf_mask[:, idx] = equiv                                 # batch_size
+            
+            # Generate input dict to bert model
+            bert_input = {'input_ids': ids.long(),
+                           #'token_type_ids': token_types.long(),
+                          'attention_mask': attn_masks.long()}
+                  
+            # Compute bert output
+            output = self.bert_model(**bert_input,
+                                     output_hidden_states = True)       # Tuple
+            bert_out[idx] = output['pooler_output'].unsqueeze(1)        # batch_size x 1 x h_dim
+        
+        x = torch.cat(list(bert_out.values()), dim=1)                   # batch_size x max_n_pars x h_dim
+        
+        return x, transf_mask
+
+    def transf_encode_f(self, model, x, transf_mask):
+        
+        x = x.transpose(0,1)                                            # max_n_pars x batch_size x h_dim
+        x = model(x,src_key_padding_mask = transf_mask)                 # max_n_pars x batch_size x h_dim
+        x = self.drops(x)                                               # max_n_pars x batch_size x h_dim
+        x = x.transpose(0,1)                                            # batch_size x max_n_pars x h_dim
+        
+        return x
+
     def forward(self, X_facts_ids, X_facts_token_types, X_facts_attn_masks,
                 X_echr_ids, X_echr_token_types, X_echr_attn_masks):
         
@@ -85,93 +131,27 @@ class ECHR2_model(nn.Module):
         empty_par_ids = empty_par_ids.repeat(batch_size, 1).to(device)  # batch_size x seq_len
 
         # BERT paragraph encoding        
-        # Encode paragraphs - BERT & generate transfomers masks
-        bert_out = {}
-        transf_mask_facts = torch.zeros((batch_size,
-                                         self.max_num_pars_facts),
-                                         dtype=torch.bool).to(device)    # batch_size x max_n_pars
-        
-        #for idx in range(0, max_num_pars):
-        for idx in tqdm(range(0, self.max_num_pars_facts),
-                        total = self.max_num_pars_facts,
-                        desc = 'Iterating through paragraphs'):
-            span_b = self.seq_len * idx
-            span_e = self.seq_len * (idx + 1)
-            
-            # Slice sequence
-            ids = X_facts_ids[:, span_b:span_e]                         # batch_size x seq_len
-             #token_types = X_facts_token_types[:, span_b:span_e]        # batch_size x seq_len
-            attn_masks = X_facts_attn_masks[:, span_b:span_e]           # batch_size x seq_len
-            
-            # Generate masks for transformer
-            equiv = torch.eq(ids, empty_par_ids)                        # batch_size x seq_len
-            equiv = equiv.all(dim = 1)                                  # batch_size
-            transf_mask_facts[:, idx] = equiv                           # batch_size
-            
-            # Generate input dict to bert model
-            bert_input = {'input_ids': ids.long(),
-                           #'token_type_ids': token_types.long(),
-                          'attention_mask': attn_masks.long()}
-                  
-            # Compute bert output
-            output = self.bert_model(**bert_input,
-                                     output_hidden_states = True)       # Tuple
-            bert_out[idx] = output['pooler_output'].unsqueeze(1)        # batch_size x 1 x h_dim
-        
-        x_facts = torch.cat(list(bert_out.values()), dim=1)             # batch_size x max_n_pars x h_dim
-        
-        
-        # Encode paragraphs - BERT & generate transfomers masks
-        bert_out = {}
-        transf_mask_echr = torch.zeros((batch_size,
-                                        self.max_num_pars_echr),
-                                        dtype=torch.bool).to(device)    # batch_size x max_n_pars
-        
-        #for idx in range(0, max_num_pars):
-        for idx in tqdm(range(0, self.max_num_pars_echr),
-                        total = self.max_num_pars_echr,
-                        desc = 'Iterating through paragraphs'):
-            span_b = self.seq_len * idx
-            span_e = self.seq_len * (idx + 1)
-            
-            # Slice sequence
-            ids = X_echr_ids[:, span_b:span_e]                          # batch_size x seq_len
-             #token_types = X_echr_token_types[:, span_b:span_e]         # batch_size x seq_len
-            attn_masks = X_echr_attn_masks[:, span_b:span_e]            # batch_size x seq_len
-            
-            # Generate masks for transformer
-            equiv = torch.eq(ids, empty_par_ids)                        # batch_size x seq_len
-            equiv = equiv.all(dim = 1)                                  # batch_size
-            transf_mask_echr[:, idx] = equiv                            # batch_size
-            
-            # Generate input dict to bert model
-            bert_input = {'input_ids': ids.long(),
-                           #'token_type_ids': token_types.long(),
-                          'attention_mask': attn_masks.long()}
-                  
-            # Compute bert output
-            output = self.bert_model(**bert_input,
-                                     output_hidden_states = True)       # Tuple
-            bert_out[idx] = output['pooler_output'].unsqueeze(1)        # batch_size x 1 x h_dim
-        
-        x_echr = torch.cat(list(bert_out.values()), dim=1)              # batch_size x max_n_pars x h_dim
-        
-        # Encode document facts - Transformer
-        x_facts = x_facts.transpose(0,1)                                # max_n_pars x batch_size x h_dim
-        x_facts = self.transf_enc_facts(x_facts,
-                                        src_key_padding_mask =\
-                                            transf_mask_facts)          # max_n_pars x batch_size x h_dim
-        x_facts = self.drops(x_facts)                                   # max_n_pars x batch_size x h_dim
-        x_facts = x_facts.transpose(0,1)                                # batch_size x max_n_pars x h_dim
+        x_facts, transf_mask_facts = self.BERT_encode_f(X_facts_ids,
+                                                        X_facts_token_types,
+                                                        X_facts_attn_masks,
+                                                        self.max_n_pars_facts,
+                                                        batch_size,
+                                                        empty_par_ids,
+                                                        device)         # batch_size x max_n_pars_facts x h_dim
+        x_echr, transf_mask_echr = self.BERT_encode_f(X_echr_ids,
+                                                      X_echr_token_types,
+                                                      X_echr_attn_masks,
+                                                      self.max_n_pars_echr,
+                                                      batch_size,
+                                                      empty_par_ids,
+                                                      device)           # batch_size x max_n_pars_echr x h_dim
         
         # Encode document echr - Transformer
-        x_echr = x_echr.transpose(0,1)                                  # max_n_pars x batch_size x h_dim
-        x_echr = self.transf_enc_echr(x_echr,
-                                      src_key_padding_mask =\
-                                          transf_mask_echr)             # max_n_pars x batch_size x h_dim
-        x_echr = self.drops(x_echr)                                     # max_n_pars x batch_size x h_dim
-        x_echr = x_echr.transpose(0,1)                                  # batch_size x max_n_pars x h_dim
-        
+        x_facts = self.transf_encode_f(self.transf_enc_facts,
+                                       x_facts, transf_mask_facts)      # batch_size x max_n_pars_facts x h_dim
+        x_echr = self.transf_encode_f(self.transf_enc_echr,
+                                      x_echr, transf_mask_echr)         # batch_size x max_n_pars_echr x h_dim
+                        
         # Concatenate fact and echr encodings
         x = torch.cat([x_facts, x_echr], dim = 1)                       # batch_size x (max_n_pars_facts + max_n_pars_echr) x h_dim
         
