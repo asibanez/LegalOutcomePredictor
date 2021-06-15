@@ -43,18 +43,23 @@ def test_f(args):
     Y_predicted_binary = []
     Y_ground_truth = []
 
-    for X_facts_ids, X_facts_token_types, X_facts_attn_masks, Y_labels in \
-        tqdm(test_dl, desc = 'Testing'):
+    for (X_facts_ids, X_facts_token_types, X_facts_attn_masks,
+         X_echr_ids, X_echr_token_types, X_echr_attn_masks,
+         Y_labels) in tqdm(test_dl, desc = 'Testing'):
 
         # Move to cuda
         X_facts_ids = X_facts_ids.to(device)
         #X_facts_token_types = X_facts_token_types.to(device)
         X_facts_attn_masks = X_facts_attn_masks.to(device)
+        X_echr_ids = X_echr_ids.to(device)
+        #X_echr_token_types = X_echr_token_types.to(device)
+        X_echr_attn_masks = X_echr_attn_masks.to(device)
         Y_labels = Y_labels.to(device)
         
         # Compute predictions and append
         with torch.no_grad():
-            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks)
+            pred_batch_score = model(X_facts_ids, X_facts_token_types, X_facts_attn_masks,
+                                     X_echr_ids, X_echr_token_types, X_echr_attn_masks)
 
         pred_batch_binary = torch.round(pred_batch_score)
         Y_predicted_score.append(pred_batch_score)
@@ -98,8 +103,7 @@ def main():
     args.dropout = 0.4
     
     # Path initialization
-    output_file = 'full_results_' + args.test_file.split('.')[0] + \
-        '.json'
+    output_file = 'full_results_' + args.test_file.split('.')[0] + '.json'
     args.path_model_holdout = os.path.join(args.input_dir, args.test_file)
     args.path_model = os.path.join(args.work_dir, 'model.pt')
     args.path_results_train = os.path.join(args.work_dir, 'train_results.json')
