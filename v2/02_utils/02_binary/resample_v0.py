@@ -45,7 +45,7 @@ def main():
     
     # Save resampled data
     file_name, file_ext = os.path.splitext(os.path.basename(input_path))
-    output_filename = file_name + '_resampled' + file_ext
+    output_filename = file_name + '_resampled_' + str(args.min_maj_ratio) + file_ext
     output_folder = os.path.dirname(input_path)
     output_path = os.path.join(output_folder, output_filename)
     pd.to_pickle(res_data, output_path)

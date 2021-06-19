@@ -93,7 +93,7 @@ class ECHR2_model(nn.Module):
             
             # Generate masks for transformer
             equiv = torch.eq(ids, empty_par_ids)                        # batch_size x seq_len
-            equiv = equiv.all(dim = 1)                                 # batch_size
+            equiv = equiv.all(dim = 1)                                  # batch_size
             transf_mask[:, idx] = equiv                                 # batch_size
             
             # Generate input dict to bert model

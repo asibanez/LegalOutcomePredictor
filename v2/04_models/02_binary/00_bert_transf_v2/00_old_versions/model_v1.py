@@ -1,4 +1,5 @@
 # v0 -> Adds article paragrpahs to 01_facts v4
+# v1 -> Moves generic functions to forward section for debugging
 
 # Imports
 import numpy as np

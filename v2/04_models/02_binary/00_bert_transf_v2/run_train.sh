@@ -1,14 +1,14 @@
 #INPUT_DIR=C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary
 #OUTPUT_DIR=C:/Users/siban/Dropbox/CSAIL/Projects/12_Legal_Outcome_Predictor/00_data/v2/02_runs/01_binary/00_BERT_TRANSF_v2_FIX_50par_20ep/
 
-INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/02_full_binary
-OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/01_binary/00_BERT_TRANSF_v2_FIX_50par_5ep
+INPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/01_preprocessed/01_50pars_256_tok/04_full_binary_resampled_1.0
+OUTPUT_DIR=/data/rsg/nlp/sibanez/02_LegalOutcomePredictor/00_data/v2/02_runs/01_binary/02_BERT_TRANSF_v2_FIX_50par_10ep_resampled_1.0
 
 python train_v1.py \
     --input_dir=$INPUT_DIR \
     --output_dir=$OUTPUT_DIR \
-    --n_epochs=5 \
-    --batch_size=60 \
+    --n_epochs=20 \
+    --batch_size=40 \
     --shuffle_train=True \
     --train_toy_data=False \
     --len_train_toy_data=800 \
